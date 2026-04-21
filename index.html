@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kitchen Stock">
+<title>Kitchen Stock</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --card: #1e2235;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f2ff;
+    --text2: #8b90a8;
+    --text3: #555a72;
+    --accent: #4f7cff;
+    --accent2: #3d6aee;
+    --green: #2dce7a;
+    --amber: #f5a623;
+    --red: #f5445a;
+    --blue: #4f7cff;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  
+  /* NAV */
+  .topbar { position: sticky; top: 0; z-index: 50; background: rgba(15,17,23,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-sub { font-size: 11px; color: var(--text2); }
+  .add-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(15,17,23,0.95); backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 14px; cursor: pointer; color: var(--text3); font-size: 11px; border: none; background: none; transition: color 0.15s; }
+  .nav-item.active { color: var(--accent); }
+  .nav-icon { font-size: 22px; }
+
+  /* MAIN */
+  .main { padding: 0 0 80px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 16px 16px 0; }
+  .stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
+  .stat-val { font-size: 20px; font-weight: 700; }
+  .stat-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .stat-val.ok { color: var(--green); }
+  .stat-val.warn { color: var(--amber); }
+  .stat-val.bad { color: var(--red); }
+
+  /* SEARCH */
+  .search-wrap { padding: 14px 16px 8px; }
+  .search-box { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: var(--text); outline: none; }
+  .search-box::placeholder { color: var(--text3); }
+  .search-box:focus { border-color: var(--accent); }
+
+  /* CATEGORY PILLS */
+  .cats { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
+  .cats::-webkit-scrollbar { display: none; }
+  .cat-pill { flex-shrink: 0; padding: 5px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .cat-pill.active { background: var(--accent); color: #fff; border-color: transparent; }
+
+  /* ITEM LIST */
+  .section-label { font-size: 11px; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 20px 8px; }
+  .item-list { display: flex; flex-direction: column; gap: 0; }
+  .item-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg); transition: background 0.1s; cursor: pointer; }
+  .item-row:active { background: var(--bg2); }
+  .item-row.low { border-left: 3px solid var(--amber); }
+  .item-row.empty { border-left: 3px solid var(--red); opacity: 0.6; }
+  .item-emoji { font-size: 28px; width: 40px; text-align: center; flex-shrink: 0; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 15px; font-weight: 600; }
+  .item-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .item-badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+  .badge-low { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .badge-empty { background: rgba(245,68,90,0.15); color: var(--red); }
+  .qty-area { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .qty-btn.minus:active { background: rgba(245,68,90,0.2); border-color: var(--red); }
+  .qty-btn.plus:active { background: rgba(79,124,255,0.2); border-color: var(--accent); }
+  .qty-display { text-align: center; min-width: 42px; }
+  .qty-num { font-size: 18px; font-weight: 700; }
+  .qty-unit { font-size: 10px; color: var(--text2); }
+
+  /* NFC / SCAN TAB */
+  .scan-tab { padding: 20px 16px; }
+  .method-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .method-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .method-card:active { transform: scale(0.97); }
+  .method-card.active-method { border-color: var(--accent); background: rgba(79,124,255,0.08); }
+  .method-icon { font-size: 36px; margin-bottom: 10px; }
+  .method-name { font-size: 14px; font-weight: 600; }
+  .method-desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* NFC ZONE */
+  .nfc-zone { background: var(--card); border: 2px dashed var(--border2); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+  .nfc-zone.scanning { border-color: var(--accent); animation: pulse 1.5s infinite; }
+  .nfc-zone.success { border-color: var(--green); background: rgba(45,206,122,0.05); }
+  .nfc-zone.error { border-color: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .nfc-big-icon { font-size: 56px; margin-bottom: 12px; }
+  .nfc-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .nfc-subtitle { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .nfc-result { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px; }
+  .nfc-result.ok { background: rgba(45,206,122,0.1); color: var(--green); }
+  .nfc-result.err { background: rgba(245,68,90,0.1); color: var(--red); }
+  .nfc-result.warn { background: rgba(245,166,35,0.1); color: var(--amber); }
+
+  /* BARCODE ZONE */
+  .barcode-zone { background: var(--card); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+  #camera-view { width: 100%; height: 220px; object-fit: cover; display: none; }
+  #camera-view.active { display: block; }
+  .barcode-controls { padding: 16px; }
+  .cam-btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+  .cam-btn:active { background: var(--accent2); }
+  .manual-row { display: flex; gap: 8px; }
+  .manual-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); font-family: monospace; outline: none; }
+  .manual-input:focus { border-color: var(--accent); }
+  .go-btn { padding: 10px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; }
+
+  /* WRITE NFC TAB */
+  .write-section { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .write-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .write-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 14px; }
+  .item-picker { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); outline: none; margin-bottom: 12px; }
+  .write-btn { width: 100%; padding: 13px; background: var(--green); color: #0f1117; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .write-btn:active { opacity: 0.85; }
+
+  /* HISTORY */
+  .history-tab { padding: 16px; }
+  .hist-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hist-text { flex: 1; font-size: 13px; color: var(--text); }
+  .hist-time { font-size: 11px; color: var(--text3); }
+
+  /* ADD/EDIT MODAL */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; }
+  .overlay.open { display: flex; }
+  .sheet { background: var(--bg2); border-radius: 24px 24px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px 20px 40px; }
+  .sheet-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
+  .sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+  .form-field { margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text); outline: none; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text); outline: none; }
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .emoji-opt { font-size: 26px; padding: 6px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+  .emoji-opt.sel { border-color: var(--accent); background: rgba(79,124,255,0.1); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .sheet-btn { flex: 1; padding: 14px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+  .sheet-btn.cancel { background: var(--bg3); color: var(--text2); }
+  .sheet-btn.save { background: var(--accent); color: #fff; }
+  .sheet-btn.del { background: rgba(245,68,90,0.15); color: var(--red); }
+  .empty-msg { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px; padding: 10px 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  .toast.ok { border-color: var(--green); color: var(--green); }
+  .toast.err { border-color: var(--red); color: var(--red); }
+  .toast.warn { border-color: var(--amber); color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">🧊 Kitchen Stock</div>
+    <div class="topbar-sub" id="topbar-sub">Loading...</div>
+  </div>
+  <button class="add-btn" onclick="openAddSheet()">+</button>
+</div>
+
+<div class="main" id="main-content">
+  <!-- Inventory Tab -->
+  <div id="tab-inventory">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="search-wrap"><input class="search-box" type="search" id="search-input" placeholder="🔍  Search items..." oninput="renderInventory()"></div>
+    <div class="cats" id="cats-row"></div>
+    <div id="inventory-list"></div>
+  </div>
+
+  <!-- Scan/NFC Tab -->
+  <div id="tab-scan" style="display:none">
+    <div class="scan-tab">
+      <div class="method-cards">
+        <div class="method-card active-method" id="method-nfc" onclick="setMethod('nfc')">
+          <div class="method-icon">📡</div>
+          <div class="method-name">NFC Tap</div>
+          <div class="method-desc">Tap tag on container</div>
+        </div>
+        <div class="method-card" id="method-barcode" onclick="setMethod('barcode')">
+          <div class="method-icon">📷</div>
+          <div class="method-name">Barcode</div>
+          <div class="method-desc">Scan or type code</div>
+        </div>
+      </div>
+
+      <!-- NFC panel -->
+      <div id="panel-nfc">
+        <div class="nfc-zone" id="nfc-zone" onclick="startNFCScan()">
+          <div class="nfc-big-icon" id="nfc-icon">📡</div>
+          <div class="nfc-title" id="nfc-title">Tap to start NFC scan</div>
+          <div class="nfc-subtitle" id="nfc-sub">Press the button, then hold your phone to the NFC tag on your container</div>
+          <div class="nfc-result" id="nfc-result" style="display:none"></div>
+        </div>
+
+        <div class="write-section" style="margin-top:20px">
+          <div class="write-title">⚙️ Write NFC tag to item</div>
+          <div class="write-desc">Do this once per container. Pick an item, then tap Write and hold your phone to a blank NFC tag. After that, tapping that tag will auto-deduct stock.</div>
+          <select class="item-picker" id="nfc-write-picker"></select>
+          <button class="write-btn" onclick="writeNFCTag()">📡 Write NFC Tag</button>
+          <div class="nfc-result" id="write-result" style="display:none; margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Barcode panel -->
+      <div id="panel-barcode" style="display:none">
+        <div class="barcode-zone">
+          <video id="camera-view" autoplay playsinline muted></video>
+          <div class="barcode-controls">
+            <button class="cam-btn" id="cam-toggle-btn" onclick="toggleCamera()">📷 Open Camera to Scan</button>
+            <div class="manual-row">
+              <input class="manual-input" id="barcode-input" type="text" placeholder="Or type barcode number..." onkeydown="if(event.key==='Enter')processBarcode(this.value)">
+              <button class="go-btn" onclick="processBarcode(document.getElementById('barcode-input').value)">Go</button>
+            </div>
+          </div>
+        </div>
+        <div class="nfc-result" id="barcode-result" style="display:none; margin-top:0; border-radius:0 0 16px 16px;"></div>
+
+        <div class="write-section" style="margin-top:16px">
+          <div class="write-title">🔗 Assign barcode to item</div>
+          <div class="write-desc">Scan the barcode on a package, then link it to an item in your inventory. Next time you scan it, it auto-deducts.</div>
+          <select class="item-picker" id="barcode-assign-picker"></select>
+          <div class="manual-row" style="margin-bottom:10px">
+            <input class="manual-input" id="barcode-assign-val" type="text" placeholder="Barcode number...">
+            <button class="go-btn" onclick="assignBarcode()">Link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Tab -->
+  <div id="tab-history" style="display:none">
+    <div class="history-tab">
+      <div class="section-label">Recent activity</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-inventory" onclick="switchTab('inventory')">
+    <span class="nav-icon">🧊</span>Stock
+  </button>
+  <button class="nav-item" id="nav-scan" onclick="switchTab('scan')">
+    <span class="nav-icon">📡</span>Scan / NFC
+  </button>
+  <button class="nav-item" id="nav-history" onclick="switchTab('history')">
+    <span class="nav-icon">📋</span>History
+  </button>
+</nav>
+
+<!-- Add/Edit Sheet -->
+<div class="overlay" id="sheet-overlay" onclick="closeSheet(event)">
+  <div class="sheet" id="item-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-title">Add Item</div>
+    <div class="form-field">
+      <label class="form-label">Emoji</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+    <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="f-name" type="text" placeholder="e.g. Eggs"></div>
+    <div class="form-field"><label class="form-label">Category</label>
+      <select class="form-select" id="f-cat">
+        <option>Produce</option><option>Dairy</option><option>Protein</option><option>Pantry</option><option>Frozen</option><option>Drinks</option><option>Snacks</option>
+      </select>
+    </div>
+    <div class="two-col">
+      <div class="form-field"><label class="form-label">Quantity</label><input class="form-input" id="f-qty" type="number" min="0" value="1"></div>
+      <div class="form-field"><label class="form-label">Unit</label><input class="form-input" id="f-unit" type="text" value="pcs"></div>
+    </div>
+    <div class="form-field"><label class="form-label">Low stock alert at</label><input class="form-input" id="f-low" type="number" min="0" value="2"></div>
+    <div class="form-field"><label class="form-label">Barcode (optional)</label><input class="form-input" id="f-barcode" type="text" placeholder="Scan or type"></div>
+    <div class="sheet-actions">
+      <button class="sheet-btn cancel" onclick="closeSheet()">Cancel</button>
+      <button class="sheet-btn del" id="del-btn" onclick="deleteItem()" style="display:none">Delete</button>
+      <button class="sheet-btn save" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EMOJIS=['🥚','🥛','🧀','🥩','🍗','🐟','🥦','🥕','🧅','🍅','🌽','🍋','🍎','🍌','🫙','🧈','🥫','🍞','🧂','🫒','🧄','🍚','🍜','🧃','🥤','🧊','🍫','🥐','🫐','🥣','🧆','🥗','🫚','🧋','🍶','🫖'];
+let items=JSON.parse(localStorage.getItem('ks_items')||'null')||[
+  {id:1,emoji:'🥚',name:'Eggs',category:'Protein',qty:6,unit:'pcs',low:3,barcode:'',nfc:''},
+  {id:2,emoji:'🥛',name:'Milk',category:'Dairy',qty:2,unit:'L',low:1,barcode:'',nfc:''},
+  {id:3,emoji:'🥦',name:'Broccoli',category:'Produce',qty:1,unit:'pcs',low:1,barcode:'',nfc:''},
+  {id:4,emoji:'🧀',name:'Cheese',category:'Dairy',qty:3,unit:'slices',low:2,barcode:'',nfc:''},
+  {id:5,emoji:'🍚',name:'Rice',category:'Pantry',qty:0,unit:'kg',low:1,barcode:'',nfc:''},
+  {id:6,emoji:'🧄',name:'Garlic',category:'Produce',qty:5,unit:'pcs',low:2,barcode:'',nfc:''},
+  {id:7,emoji:'🥩',name:'Chicken',category:'Protein',qty:2,unit:'pcs',low:1,barcode:'',nfc:''},
+];
+let history=JSON.parse(localStorage.getItem('ks_history')||'[]');
+let nextId=Math.max(0,...items.map(i=>i.id))+1;
+let activeTab='inventory';
+let activeCat='All';
+let editId=null;
+let selEmoji='🥚';
+let scanMethod='nfc';
+let cameraStream=null;
+let barcodeDetector=null;
+let scanLoop=null;
+
+function save(){localStorage.setItem('ks_items',JSON.stringify(items));localStorage.setItem('ks_history',JSON.stringify(history.slice(0,100)));}
+function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});save();}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2000);}
+
+function switchTab(t){
+  activeTab=t;
+  ['inventory','scan','history'].forEach(tab=>{
+    document.getElementById('tab-'+tab).style.display=tab===t?'':'none';
+    document.getElementById('nav-'+tab).classList.toggle('active',tab===t);
+  });
+  if(t==='scan'){populatePickers();}
+  if(t==='history'){renderHistory();}
+  if(t!=='scan'&&cameraStream){stopCamera();}
+}
+
+// INVENTORY
+function renderInventory(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  let filtered=items.filter(i=>i.name.toLowerCase().includes(q)&&(activeCat==='All'||i.category===activeCat));
+  filtered.sort((a,b)=>a.qty-b.qty);
+  const el=document.getElementById('inventory-list');
+  if(!filtered.length){el.innerHTML='<div class="empty-msg">No items found</div>';return;}
+  el.innerHTML=filtered.map(item=>{
+    const s=item.qty===0?'empty':item.qty<=item.low?'low':'';
+    const badge=item.qty===0?'<span class="item-badge badge-empty">Out</span>':item.qty<=item.low?'<span class="item-badge badge-low">Low</span>':'';
+    return`<div class="item-row ${s}" onclick="openEditSheet(${item.id})">
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info"><div class="item-name">${item.name}${badge}</div><div class="item-meta">${item.category}${item.nfc?' · 📡 NFC':''}${item.barcode?' · 🔢 Barcode':''}</div></div>
+      <div class="qty-area">
+        <button class="qty-btn minus" onclick="event.stopPropagation();changeQty(${item.id},-1)">−</button>
+        <div class="qty-display"><div class="qty-num">${item.qty}</div><div class="qty-unit">${item.unit}</div></div>
+        <button class="qty-btn plus" onclick="event.stopPropagation();changeQty(${item.id},1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderStats(){
+  const total=items.length,empty=items.filter(i=>i.qty===0).length,low=items.filter(i=>i.qty>0&&i.qty<=i.low).length,ok=total-empty-low;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">Items</div></div>
+    <div class="stat-card"><div class="stat-val ok">${ok}</div><div class="stat-lbl">Stocked</div></div>
+    <div class="stat-card"><div class="stat-val warn">${low}</div><div class="stat-lbl">Low</div></div>
+    <div class="stat-card"><div class="stat-val bad">${empty}</div><div class="stat-lbl">Empty</div></div>`;
+  document.getElementById('topbar-sub').textContent=`${ok} ok · ${low} low · ${empty} empty`;
+}
+
+function renderCats(){
+  const cats=['All',...new Set(items.map(i=>i.category))];
+  document.getElementById('cats-row').innerHTML=cats.map(c=>`<button class="cat-pill${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+
+function setCat(c){activeCat=c;renderCats();renderInventory();}
+
+function changeQty(id,d){
+  const item=items.find(i=>i.id===id);if(!item)return;
+  const prev=item.qty;item.qty=Math.max(0,item.qty+d);
+  if(item.qty!==prev){addHist(d>0?'add':'remove',d>0?`+1 ${item.unit} of ${item.name}`:`Used 1 ${item.unit} of ${item.name} → ${item.qty} left`);save();renderInventory();renderStats();}
+  if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
+  else if(item.qty<=item.low&&d<0)toast(`${item.name} is running low`,'warn');
+}
+
+// NFC
+function setMethod(m){
+  scanMethod=m;
+  document.getElementById('method-nfc').classList.toggle('active-method',m==='nfc');
+  document.getElementById('method-barcode').classList.toggle('active-method',m==='barcode');
+  document.getElementById('panel-nfc').style.display=m==='nfc'?'':'none';
+  document.getElementById('panel-barcode').style.display=m==='barcode'?'':'none';
+  if(m!=='barcode'&&cameraStream)stopCamera();
+}
+
+function startNFCScan(){
+  if(!('NDEFReader' in window)){showNFCResult('nfc-result','err','NFC not supported on this browser. Use Chrome on Android.');return;}
+  const zone=document.getElementById('nfc-zone');
+  zone.classList.add('scanning');
+  document.getElementById('nfc-icon').textContent='📡';
+  document.getElementById('nfc-title').textContent='Scanning... hold to tag';
+  document.getElementById('nfc-sub').textContent='Keep your phone close to the NFC tag';
+  document.getElementById('nfc-result').style.display='none';
+  const reader=new NDEFReader();
+  reader.scan().then(()=>{
+    reader.addEventListener('reading',({message,serialNumber})=>{
+      zone.classList.remove('scanning');
+      const tagId=serialNumber||'unknown';
+      const item=items.find(i=>i.nfc&&i.nfc===tagId);
+      if(item){
+        if(item.qty>0){
+          item.qty--;
+          addHist('nfc',`NFC: used 1 ${item.unit} of ${item.name} → ${item.qty} left`);
+          save();renderInventory();renderStats();
+          zone.classList.add('success');
+          document.getElementById('nfc-icon').textContent='✅';
+          document.getElementById('nfc-title').textContent=item.name;
+          showNFCResult('nfc-result','ok',`Deducted 1 ${item.unit} — ${item.qty} ${item.unit} remaining`);
+          if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
+          else if(item.qty<=item.low)toast(`${item.name} is running low`,'warn');
+        } else {
+          zone.classList.add('error');
+          document.getElementById('nfc-icon').textContent='⚠️';
+          showNFCResult('nfc-result','warn',`${item.name} is already out of stock`);
+        }
+      } else {
+        zone.classList.add('error');
+        document.getElementById('nfc-icon').textContent='❓';
+        showNFCResult('nfc-result','err',`Unknown tag (${tagId}). Go to "Write NFC Tag" to link it to an item first.`);
+      }
+      setTimeout(()=>{zone.className='nfc-zone';document.getElementById('nfc-icon').textContent='📡';document.getElementById('nfc-title').textContent='Tap to start NFC scan';document.getElementById('nfc-sub').textContent='Press the button, then hold your phone to the NFC tag on your container';},3000);
+    });
+  }).catch(e=>{
+    zone.classList.remove('scanning');
+    showNFCResult('nfc-result','err','Could not start NFC: '+e.message+'. Make sure NFC is enabled in Android settings.');
+  });
+}
+
+async function writeNFCTag(){
+  if(!('NDEFWriter' in window)&&!('NDEFReader' in window)){showNFCResult('write-result','err','NDEFWriter not available. Use Chrome 89+ on Android.');return;}
+  const id=parseInt(document.getElementById('nfc-write-picker').value);
+  const item=items.find(i=>i.id===id);if(!item)return;
+  const res=document.getElementById('write-result');
+  res.style.display='block';res.className='nfc-result warn';res.textContent='Hold phone to blank NFC tag...';
+  try{
+    const writer=new NDEFReader();
+    await writer.write({records:[{recordType:'text',data:`ks:${item.id}`}]});
+    const reader=new NDEFReader();
+    await reader.scan();
+    reader.addEventListener('reading',({serialNumber})=>{
+      item.nfc=serialNumber||`ks-${item.id}`;
+      addHist('add',`Linked NFC tag to ${item.name}`);save();renderInventory();
+      res.className='nfc-result ok';res.textContent=`✅ NFC tag linked to ${item.name}! Now tap it to deduct stock.`;
+    },{once:true});
+  }catch(e){res.className='nfc-result err';res.textContent='Write failed: '+e.message;}
+}
+
+function showNFCResult(elId,type,msg){const el=document.getElementById(elId);el.style.display='block';el.className='nfc-result '+type;el.textContent=msg;}
+
+// BARCODE / CAMERA
+async function toggleCamera(){
+  if(cameraStream){stopCamera();return;}
+  const btn=document.getElementById('cam-toggle-btn');
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    const vid=document.getElementById('camera-view');
+    vid.srcObject=cameraStream;vid.classList.add('active');
+    btn.textContent='⏹ Stop Camera';
+    if('BarcodeDetector' in window){
+      barcodeDetector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e','code_39']});
+      scanLoop=setInterval(async()=>{
+        try{const barcodes=await barcodeDetector.detect(vid);if(barcodes.length){clearInterval(scanLoop);processBarcode(barcodes[0].rawValue,true);}}catch(e){}
+      },500);
+    } else {
+      document.getElementById('barcode-result').style.display='block';
+      document.getElementById('barcode-result').className='nfc-result warn';
+      document.getElementById('barcode-result').textContent='BarcodeDetector API not available on this device. Please type the barcode manually.';
+    }
+  }catch(e){toast('Camera access denied','err');}
+}
+
+function stopCamera(){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+  if(scanLoop){clearInterval(scanLoop);scanLoop=null;}
+  const vid=document.getElementById('camera-view');vid.srcObject=null;vid.classList.remove('active');
+  document.getElementById('cam-toggle-btn').textContent='📷 Open Camera to Scan';
+}
+
+function processBarcode(val,fromCamera=false){
+  val=(val||'').trim();if(!val)return;
+  document.getElementById('barcode-input').value='';
+  if(fromCamera)stopCamera();
+  const item=items.find(i=>i.barcode===val);
+  const res=document.getElementById('barcode-result');res.style.display='block';
+  if(item){
+    if(item.qty>0){
+      item.qty--;addHist('scan',`Barcode: used 1 ${item.unit} of ${item.name} → ${item.qty} left`);save();renderInventory();renderStats();
+      res.className='nfc-result ok';res.textContent=`✅ ${item.name} — deducted 1. ${item.qty} ${item.unit} remaining.`;
+      if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
+    } else {res.className='nfc-result warn';res.textContent=`⚠️ ${item.name} is already out of stock.`;}
+  } else {res.className='nfc-result err';res.textContent=`❓ Barcode "${val}" not linked to any item. Use "Assign barcode" below to link it.`;}
+}
+
+function assignBarcode(){
+  const id=parseInt(document.getElementById('barcode-assign-picker').value);
+  const val=document.getElementById('barcode-assign-val').value.trim();
+  if(!id||!val){toast('Pick an item and enter a barcode','err');return;}
+  const item=items.find(i=>i.id===id);if(!item)return;
+  item.barcode=val;addHist('add',`Linked barcode ${val} to ${item.name}`);save();renderInventory();
+  toast(`Barcode linked to ${item.name}`,'ok');document.getElementById('barcode-assign-val').value='';
+}
+
+function populatePickers(){
+  const opts=items.map(i=>`<option value="${i.id}">${i.emoji} ${i.name}</option>`).join('');
+  document.getElementById('nfc-write-picker').innerHTML=opts;
+  document.getElementById('barcode-assign-picker').innerHTML=opts;
+}
+
+// HISTORY
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!history.length){el.innerHTML='<div class="empty-msg">No activity yet</div>';return;}
+  const dotColor={add:'#2dce7a',remove:'#f5445a',scan:'#4f7cff',nfc:'#a855f7'};
+  el.innerHTML=history.slice(0,50).map(h=>`<div class="hist-item"><div class="hist-dot" style="background:${dotColor[h.type]||'#888'}"></div><div class="hist-text">${h.text}</div><div class="hist-time">${h.time}</div></div>`).join('');
+}
+
+// SHEET
+function openAddSheet(){editId=null;selEmoji='🥚';document.getElementById('sheet-title').textContent='Add Item';document.getElementById('f-name').value='';document.getElementById('f-qty').value='1';document.getElementById('f-unit').value='pcs';document.getElementById('f-low').value='2';document.getElementById('f-barcode').value='';document.getElementById('f-cat').value='Produce';document.getElementById('del-btn').style.display='none';renderEmojiGrid();document.getElementById('sheet-overlay').classList.add('open');}
+function openEditSheet(id){const item=items.find(i=>i.id===id);if(!item)return;editId=id;selEmoji=item.emoji;document.getElementById('sheet-title').textContent='Edit Item';document.getElementById('f-name').value=item.name;document.getElementById('f-qty').value=item.qty;document.getElementById('f-unit').value=item.unit;document.getElementById('f-low').value=item.low;document.getElementById('f-barcode').value=item.barcode||'';document.getElementById('f-cat').value=item.category;document.getElementById('del-btn').style.display='';renderEmojiGrid();document.getElementById('sheet-overlay').classList.add('open');}
+function closeSheet(e){if(!e||e.target===document.getElementById('sheet-overlay'))document.getElementById('sheet-overlay').classList.remove('open');}
+function renderEmojiGrid(){document.getElementById('emoji-grid').innerHTML=EMOJIS.map(e=>`<span class="emoji-opt${e===selEmoji?' sel':''}" onclick="selEmoji='${e}';renderEmojiGrid()">${e}</span>`).join('');}
+function saveItem(){const name=document.getElementById('f-name').value.trim();if(!name){toast('Enter a name','err');return;}const data={emoji:selEmoji,name,category:document.getElementById('f-cat').value,qty:parseInt(document.getElementById('f-qty').value)||0,unit:document.getElementById('f-unit').value||'pcs',low:parseInt(document.getElementById('f-low').value)||2,barcode:document.getElementById('f-barcode').value.trim()};if(editId){const item=items.find(i=>i.id===editId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}else{items.push({id:nextId++,...data,nfc:''});addHist('add',`Added ${name} (${data.qty} ${data.unit})`);}save();closeSheet();renderAll();toast(editId?'Item updated':'Item added','ok');}
+function deleteItem(){if(!editId)return;const item=items.find(i=>i.id===editId);if(!item)return;if(!confirm(`Delete ${item.name}?`))return;items=items.filter(i=>i.id!==editId);addHist('remove',`Deleted ${item.name}`);save();closeSheet();renderAll();toast('Item deleted','ok');}
+function renderAll(){renderStats();renderCats();renderInventory();}
+renderAll();
+</script>
+</body>
+</html>
