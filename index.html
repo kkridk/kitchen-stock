@@ -175,6 +175,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .ing-row .form-input{flex:1;}
 .ing-amt{width:70px!important;flex:none!important;}
 .ing-unit{width:70px!important;flex:none!important;}
+.ing-name-sel{flex:1;min-width:0;font-size:13px;}
 .ing-remove{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;}
 .add-ing-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:9px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:6px;}
 .ing-unit-wrap{position:relative;flex-shrink:0;}
@@ -495,7 +496,6 @@ function handleAdd(){if(activeTab==='stock')openStockSheet();else if(activeTab==
 // ── STOCK ──────────────────────────────────────────────
 let stockActiveCat='All';
 let stockEditId=null;
-let stockSelEmoji='🥚';
 
 function renderStockStats(){
   const total=stockItems.length,empty=stockItems.filter(i=>i.qty===0).length,low=stockItems.filter(i=>i.qty>0&&i.qty<=i.low).length,ok=total-empty-low;
@@ -577,35 +577,35 @@ function addCustomStockCat(){
   renderStockCatChips();renderStockCats();
 }
 function openStockSheet(){
-  stockEditId=null;stockSelEmoji='🥚';sfSelCat=stockCategories[0]||'Produce';
+  stockEditId=null; emojiSel.stock='🥚'; sfSelCat=stockCategories[0]||'Produce';
   document.getElementById('stock-sheet-title').textContent='Add Item';
-  document.getElementById('sf-name').value='';document.getElementById('sf-qty').value='1';
-  document.getElementById('sf-unit').value='pcs';document.getElementById('sf-low').value='2';
+  document.getElementById('sf-name').value=''; document.getElementById('sf-qty').value='1';
+  document.getElementById('sf-unit').value='pcs'; document.getElementById('sf-low').value='2';
   document.getElementById('sf-barcode').value='';
   document.getElementById('sf-cat-addrow').style.display='none';
   document.getElementById('stock-del-btn').style.display='none';
-  renderStockCatChips();renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');
+  renderStockCatChips(); renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stock');
   document.getElementById('stock-overlay').classList.add('open');
 }
 function openStockEditSheet(id){
-  const item=stockItems.find(i=>i.id===id);if(!item)return;
-  stockEditId=id;stockSelEmoji=item.emoji;sfSelCat=item.category;
+  const item=stockItems.find(i=>i.id===id); if(!item)return;
+  stockEditId=id; emojiSel.stock=item.emoji; sfSelCat=item.category;
   if(!stockCategories.includes(sfSelCat))stockCategories.push(sfSelCat);
   document.getElementById('stock-sheet-title').textContent='Edit Item';
-  document.getElementById('sf-name').value=item.name;document.getElementById('sf-qty').value=item.qty;
-  document.getElementById('sf-unit').value=item.unit;document.getElementById('sf-low').value=item.low;
+  document.getElementById('sf-name').value=item.name; document.getElementById('sf-qty').value=item.qty;
+  document.getElementById('sf-unit').value=item.unit; document.getElementById('sf-low').value=item.low;
   document.getElementById('sf-barcode').value=item.barcode||'';
   document.getElementById('sf-cat-addrow').style.display='none';
   document.getElementById('stock-del-btn').style.display='';
-  renderStockCatChips();renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');
+  renderStockCatChips(); renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stock');
   document.getElementById('stock-overlay').classList.add('open');
 }
 function saveStockItem(){
-  const name=document.getElementById('sf-name').value.trim();if(!name){toast('Enter a name','err');return;}
-  const data={emoji:stockSelEmoji,name,category:sfSelCat,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};
+  const name=document.getElementById('sf-name').value.trim(); if(!name){toast('Enter a name','err');return;}
+  const data={emoji:emojiSel.stock,name,category:sfSelCat,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};
   if(stockEditId){const item=stockItems.find(i=>i.id===stockEditId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}
   else{stockItems.push({id:stockNextId++,...data,nfc:''});addHist('add',`Added ${name}`);}
-  saveAll();closeOverlay('stock-overlay');renderStockAll();toast(stockEditId?'Updated':'Item added');
+  saveAll(); closeOverlay('stock-overlay'); renderStockAll(); toast(stockEditId?'Updated':'Item added');
 }
 function deleteStockItem(){if(!stockEditId)return;const item=stockItems.find(i=>i.id===stockEditId);if(!item||!confirm(`Delete ${item.name}?`))return;stockItems=stockItems.filter(i=>i.id!==stockEditId);addHist('remove',`Deleted ${item.name}`);saveAll();closeOverlay('stock-overlay');renderStockAll();toast('Deleted','warn');}
 function renderStockAll(){renderStockStats();renderStockCats();renderStock();}
@@ -613,7 +613,6 @@ function renderStockAll(){renderStockStats();renderStockCats();renderStock();}
 // ── RECIPES ──────────────────────────────────────────────
 let recipeActiveCat='All';
 let recipeEditId=null;
-let recipeSelEmoji='🍜';
 
 function getMealTypeClass(type){
   const map={any:'tb-an',breakfast:'tb-bf',lunch:'tb-lu',dinner:'tb-di',snack:'tb-sn'};
@@ -689,53 +688,49 @@ function addCustomMealType(){
 // recipe sheet
 let ingRows=[];
 function openRecipeSheet(){
-  recipeEditId=null;recipeSelEmoji='🍜';ingRows=[];rfSelType=mealTypes[0]?.toLowerCase()||'any';
+  recipeEditId=null; emojiSel.recipe='🍜'; ingRows=[]; rfSelType=mealTypes[0]?.toLowerCase()||'any';
   document.getElementById('recipe-sheet-title').textContent='Add Recipe';
-  document.getElementById('rf-name').value='';document.getElementById('rf-servings').value='2';document.getElementById('rf-notes').value='';
+  document.getElementById('rf-name').value=''; document.getElementById('rf-servings').value='2'; document.getElementById('rf-notes').value='';
   document.getElementById('recipe-del-btn').style.display='none';
   document.getElementById('rf-type-addrow').style.display='none';
-  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');
-  renderMealTypeChips();renderIngList();
+  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipe');
+  renderMealTypeChips(); renderIngList();
   document.getElementById('recipe-overlay').classList.add('open');
 }
 function openRecipeEditSheet(id){
-  const r=recipes.find(r=>r.id===id);if(!r)return;
-  recipeEditId=id;recipeSelEmoji=r.emoji;ingRows=[...r.ingredients.map(i=>({...i}))];rfSelType=r.type.toLowerCase();
+  const r=recipes.find(r=>r.id===id); if(!r)return;
+  recipeEditId=id; emojiSel.recipe=r.emoji; ingRows=[...r.ingredients.map(i=>({...i}))]; rfSelType=r.type.toLowerCase();
   if(!mealTypes.map(t=>t.toLowerCase()).includes(rfSelType)){mealTypes.push(r.type);saveAll();}
   document.getElementById('recipe-sheet-title').textContent='Edit Recipe';
-  document.getElementById('rf-name').value=r.name;document.getElementById('rf-servings').value=r.servings;document.getElementById('rf-notes').value=r.notes||'';
+  document.getElementById('rf-name').value=r.name; document.getElementById('rf-servings').value=r.servings; document.getElementById('rf-notes').value=r.notes||'';
   document.getElementById('recipe-del-btn').style.display='';
   document.getElementById('rf-type-addrow').style.display='none';
-  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');
-  renderMealTypeChips();renderIngList();
+  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipe');
+  renderMealTypeChips(); renderIngList();
   document.getElementById('recipe-overlay').classList.add('open');
 }
 function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'g'});renderIngList();}
 
 function unitSelectHTML(idx,selected){
   const units=allUnits();
-  const isCustom=selected&&!units.includes(selected);
   const opts=units.map(u=>`<option value="${u}"${u===selected?' selected':''}>${u}</option>`).join('');
   return`<div class="ing-unit-wrap">
-    <select class="ing-unit-sel" data-ing="${idx}" onchange="handleUnitChange(this,${idx})">
+    <select class="ing-unit-sel" onchange="handleUnitChange(this,${idx})">
       ${opts}
-      <option value="__custom__"${isCustom?' selected':''}>+ New</option>
+      <option value="__custom__">+ New</option>
     </select>
   </div>`;
 }
 
 function handleUnitChange(sel,idx){
   if(sel.value==='__custom__'){
-    const val=prompt('Enter new unit (e.g. ต้น, ใบ, หัว):');
+    const val=prompt('New unit (e.g. ต้น, ใบ, หัว):');
     if(val&&val.trim()){
       const u=val.trim();
       if(!customUnits.includes(u))customUnits.push(u);
       ingRows[idx].unit=u;
-      saveAll();renderIngList();
-    } else {
-      // revert
-      sel.value=ingRows[idx].unit||'g';
-    }
+      saveAll(); renderIngList();
+    } else { sel.value=ingRows[idx].unit||'g'; }
   } else {
     ingRows[idx].unit=sel.value;
   }
@@ -744,25 +739,50 @@ function handleUnitChange(sel,idx){
 function renderIngList(){
   const el=document.getElementById('ing-list');
   if(!ingRows.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No ingredients yet</div>';return;}
-  el.innerHTML=ingRows.map((ing,i)=>`<div class="ing-row">
-    <input class="form-input" value="${ing.name.replace(/"/g,'&quot;')}" placeholder="Ingredient" oninput="ingRows[${i}].name=this.value">
-    <input class="form-input ing-amt" type="number" min="0" step="0.1" value="${ing.amount}" oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
-    ${unitSelectHTML(i,ing.unit)}
-    <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
-  </div>`).join('');
+  // build stock name list for dropdown
+  const stockNames=stockItems.map(s=>s.name);
+  el.innerHTML=ingRows.map((ing,i)=>{
+    const isNew=ing.name&&!stockNames.map(n=>n.toLowerCase()).includes(ing.name.toLowerCase());
+    const nameOpts=stockNames.map(n=>`<option value="${n}"${n===ing.name?' selected':''}>${n}</option>`).join('');
+    return`<div class="ing-row">
+      <select class="form-input ing-name-sel" onchange="handleIngNameChange(this,${i})">
+        ${nameOpts}
+        <option value="__new__"${isNew||!ing.name?' selected':''}>✏️ ${isNew?ing.name:'New ingredient'}</option>
+      </select>
+      <input class="form-input ing-amt" type="number" min="0" step="0.1" value="${ing.amount}" oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
+      ${unitSelectHTML(i,ing.unit)}
+      <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
+    </div>`;
+  }).join('');
+}
+
+function handleIngNameChange(sel,idx){
+  if(sel.value==='__new__'){
+    const val=prompt('New ingredient name:');
+    if(val&&val.trim()){
+      ingRows[idx].name=val.trim();
+    }
+    renderIngList();
+  } else {
+    ingRows[idx].name=sel.value;
+    // auto-fill unit from matching stock item
+    const match=stockItems.find(s=>s.name===sel.value);
+    if(match) ingRows[idx].unit=match.unit;
+    renderIngList();
+  }
 }
 
 function saveRecipe(){
-  const name=document.getElementById('rf-name').value.trim();if(!name){toast('Enter a recipe name','err');return;}
-  const ings=ingRows.filter(i=>i.name.trim());
-  const data={emoji:recipeSelEmoji,name,type:rfSelType,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
+  const name=document.getElementById('rf-name').value.trim(); if(!name){toast('Enter a recipe name','err');return;}
+  const ings=ingRows.filter(i=>i.name&&i.name.trim());
+  const data={emoji:emojiSel.recipe,name,type:rfSelType,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
   if(recipeEditId){const r=recipes.find(r=>r.id===recipeEditId);const fav=r.fav;Object.assign(r,data);r.fav=fav;addHist('add',`Updated recipe: ${name}`);}
   else{recipes.push({id:recipeNextId++,...data});addHist('add',`Added recipe: ${name}`);}
 
-  // auto-add ingredients to stock if not already present
+  // auto-add new ingredients to stock
   let newlyAdded=[];
   ings.forEach(ing=>{
-    const nm=ing.name.trim();if(!nm)return;
+    const nm=ing.name.trim(); if(!nm)return;
     const exists=stockItems.find(s=>s.name.toLowerCase()===nm.toLowerCase());
     if(!exists){
       stockItems.push({id:stockNextId++,emoji:'🫙',name:nm,category:'Pantry',qty:0,unit:ing.unit,low:1,barcode:'',nfc:''});
@@ -771,12 +791,9 @@ function saveRecipe(){
     }
   });
 
-  saveAll();closeOverlay('recipe-overlay');renderRecipes();renderRecipeCats();renderStockAll();
-  if(newlyAdded.length){
-    toast(`Added ${newlyAdded.length} new item${newlyAdded.length>1?'s':''} to stock`,'ok');
-  } else {
-    toast(recipeEditId?'Recipe updated':'Recipe added');
-  }
+  saveAll(); closeOverlay('recipe-overlay'); renderRecipes(); renderRecipeCats(); renderStockAll();
+  if(newlyAdded.length) toast(`Added ${newlyAdded.length} new item${newlyAdded.length>1?'s':''} to stock`,'ok');
+  else toast(recipeEditId?'Recipe updated':'Recipe added');
 }
 function deleteRecipe(){if(!recipeEditId)return;const r=recipes.find(r=>r.id===recipeEditId);if(!r||!confirm(`Delete ${r.name}?`))return;recipes=recipes.filter(r=>r.id!==recipeEditId);addHist('remove',`Deleted recipe: ${r.name}`);saveAll();closeOverlay('recipe-overlay');renderRecipes();toast('Deleted','warn');}
 
@@ -951,18 +968,48 @@ function assignBarcode(){const id=parseInt(document.getElementById('barcode-assi
 function renderHistory(){const el=document.getElementById('history-list');if(!history.length){el.innerHTML='<div class="empty-msg">No activity yet</div>';return;}const dc={add:'#2dce7a',remove:'#f5445a',scan:'#4f7cff',nfc:'#a855f7'};el.innerHTML=history.slice(0,50).map(h=>`<div class="hist-item"><div class="hist-dot" style="background:${dc[h.type]||'#888'}"></div><div class="hist-text">${h.text}</div><div class="hist-time">${h.time}</div></div>`).join('');}
 
 // ── SHARED UTILS ──────────────────────────────────────────────
-function renderEmojiGrid(gridId,emojis,varName){
-  const sel=window[varName];
+// Emoji selection stored in a plain object so reads/writes always hit the same reference
+const emojiSel={stock:'🥚',recipe:'🍜'};
+
+function renderEmojiGrid(gridId, emojis, key){
   const el=document.getElementById(gridId);
-  el.innerHTML=emojis.map((e,i)=>`<span class="emoji-opt${e===sel?' sel':''}" data-idx="${i}" data-grid="${gridId}" data-var="${varName}">${e}</span>`).join('');
+  if(!el)return;
+  el.innerHTML=emojis.map((e,i)=>`<span class="emoji-opt${e===emojiSel[key]?' sel':''}" data-i="${i}">${e}</span>`).join('');
   el.querySelectorAll('.emoji-opt').forEach(span=>{
     span.addEventListener('click',()=>{
-      const allEmojis=el.querySelectorAll('.emoji-opt');
-      window[span.dataset.var]=emojis[parseInt(span.dataset.idx)];
-      allEmojis.forEach(s=>s.classList.toggle('sel',s===span));
+      emojiSel[key]=emojis[parseInt(span.dataset.i)];
+      el.querySelectorAll('.emoji-opt').forEach(s=>s.classList.toggle('sel',s===span));
     });
   });
 }
+
+function ingNameSelectHTML(idx, currentName){
+  const stockNames=stockItems.map(s=>s.name);
+  const isNew=currentName&&!stockNames.map(n=>n.toLowerCase()).includes(currentName.toLowerCase());
+  let opts=stockNames.map(n=>`<option value="${n}"${n===currentName?' selected':''}>${n}</option>`).join('');
+  opts+=`<option value="__new__"${isNew||!currentName?' selected':''}>✏️ New ingredient</option>`;
+  return`<select class="form-input ing-name-sel" data-idx="${idx}" onchange="handleIngNameChange(this,${idx})">${opts}</select>`;
+}
+
+function handleIngNameChange(sel,idx){
+  if(sel.value==='__new__'){
+    const val=prompt('Ingredient name:');
+    if(val&&val.trim()){
+      ingRows[idx].name=val.trim();
+    } else {
+      // revert to first stock item or keep blank
+      ingRows[idx].name=stockItems[0]?.name||'';
+    }
+    renderIngList();
+  } else {
+    ingRows[idx].name=sel.value;
+    // auto-fill unit from stock item
+    const match=stockItems.find(s=>s.name===sel.value);
+    if(match)ingRows[idx].unit=match.unit;
+    renderIngList();
+  }
+}
+
 function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
 
 // ── INIT ──────────────────────────────────────────────
