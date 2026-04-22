@@ -170,18 +170,28 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .sheet-btn.save{background:var(--accent);color:#fff;}
 .sheet-btn.del{background:rgba(245,68,90,0.15);color:var(--red);}
 /* INGREDIENTS */
-.ing-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
-.ing-row{display:flex;gap:7px;align-items:center;}
-.ing-row .form-input{flex:1;}
-.ing-amt{width:70px!important;flex:none!important;}
-.ing-unit{width:70px!important;flex:none!important;}
-.ing-name-sel{flex:1;min-width:0;font-size:13px;}
-.ing-remove{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;}
-.add-ing-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:9px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:6px;}
+.ing-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+.ing-row{display:flex;flex-direction:column;gap:5px;}
+.ing-row-top{display:flex;gap:7px;align-items:center;}
+.ing-search-wrap{flex:1;position:relative;}
+.ing-search{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:14px;color:var(--text);outline:none;}
+.ing-search:focus{border-color:var(--accent);}
+.ing-search::placeholder{color:var(--text3);}
+.ing-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;z-index:100;max-height:180px;overflow-y:auto;margin-top:3px;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.ing-suggestions.open{display:block;}
+.ing-suggestion{padding:9px 13px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.ing-suggestion:last-child{border-bottom:none;}
+.ing-suggestion:active{background:var(--bg3);}
+.ing-suggestion.new-item{color:var(--accent);}
+.ing-suggestion-sub{font-size:11px;color:var(--text3);margin-left:auto;}
+.ing-amt{width:70px;flex:none;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 8px;font-size:14px;color:var(--text);outline:none;text-align:center;}
+.ing-amt:focus{border-color:var(--accent);}
 .ing-unit-wrap{position:relative;flex-shrink:0;}
-.ing-unit-sel{width:76px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 6px 10px 10px;font-size:13px;color:var(--text);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;}
+.ing-unit-sel{width:76px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 6px 9px 10px;font-size:13px;color:var(--text);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;}
 .ing-unit-sel:focus{border-color:var(--accent);}
-.ing-unit-custom{width:76px;background:var(--bg3);border:1px solid var(--accent);border-radius:9px;padding:10px 6px;font-size:13px;color:var(--text);outline:none;}
+.ing-remove{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+.ing-remove:active{color:var(--red);}
+.add-ing-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:9px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:6px;}
 /* stock-to-add confirm banner */
 .stock-add-banner{background:rgba(45,206,122,0.08);border:1px solid rgba(45,206,122,0.25);border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:13px;color:var(--green);line-height:1.6;}
 /* PICKER SHEET */
@@ -709,7 +719,15 @@ function openRecipeEditSheet(id){
   renderMealTypeChips(); renderIngList();
   document.getElementById('recipe-overlay').classList.add('open');
 }
-function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'g'});renderIngList();}
+function addIngredientRow(){
+  ingRows.push({name:'',amount:1,unit:'g'});
+  renderIngList();
+  // focus the new search input
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll('.ing-search');
+    if(inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
 
 function unitSelectHTML(idx,selected){
   const units=allUnits();
@@ -738,38 +756,91 @@ function handleUnitChange(sel,idx){
 
 function renderIngList(){
   const el=document.getElementById('ing-list');
-  if(!ingRows.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No ingredients yet</div>';return;}
-  // build stock name list for dropdown
-  const stockNames=stockItems.map(s=>s.name);
-  el.innerHTML=ingRows.map((ing,i)=>{
-    const isNew=ing.name&&!stockNames.map(n=>n.toLowerCase()).includes(ing.name.toLowerCase());
-    const nameOpts=stockNames.map(n=>`<option value="${n}"${n===ing.name?' selected':''}>${n}</option>`).join('');
-    return`<div class="ing-row">
-      <select class="form-input ing-name-sel" onchange="handleIngNameChange(this,${i})">
-        ${nameOpts}
-        <option value="__new__"${isNew||!ing.name?' selected':''}>✏️ ${isNew?ing.name:'New ingredient'}</option>
-      </select>
-      <input class="form-input ing-amt" type="number" min="0" step="0.1" value="${ing.amount}" oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
-      ${unitSelectHTML(i,ing.unit)}
-      <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
-    </div>`;
-  }).join('');
+  if(!ingRows.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No ingredients yet</div>';
+    return;
+  }
+  el.innerHTML=ingRows.map((ing,i)=>`
+    <div class="ing-row" id="ing-row-${i}">
+      <div class="ing-row-top">
+        <div class="ing-search-wrap">
+          <input class="ing-search" id="ing-search-${i}" type="text"
+            value="${ing.name.replace(/"/g,'&quot;')}"
+            placeholder="Search ingredient..."
+            autocomplete="off"
+            oninput="filterIngSuggestions(${i},this.value)"
+            onfocus="showIngSuggestions(${i},this.value)"
+            onblur="setTimeout(()=>hideIngSuggestions(${i}),150)"
+          >
+          <div class="ing-suggestions" id="ing-sug-${i}"></div>
+        </div>
+        <input class="ing-amt" type="number" min="0" step="0.1" value="${ing.amount}"
+          oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
+        ${unitSelectHTML(i,ing.unit)}
+        <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
+      </div>
+    </div>`).join('');
 }
 
-function handleIngNameChange(sel,idx){
-  if(sel.value==='__new__'){
-    const val=prompt('New ingredient name:');
-    if(val&&val.trim()){
-      ingRows[idx].name=val.trim();
-    }
-    renderIngList();
-  } else {
-    ingRows[idx].name=sel.value;
-    // auto-fill unit from matching stock item
-    const match=stockItems.find(s=>s.name===sel.value);
-    if(match) ingRows[idx].unit=match.unit;
-    renderIngList();
+function getIngSuggestions(query){
+  const q=(query||'').toLowerCase().trim();
+  const names=stockItems.map(s=>({name:s.name,unit:s.unit,emoji:s.emoji}));
+  if(!q) return names.slice(0,8);
+  return names.filter(s=>s.name.toLowerCase().includes(q)).slice(0,8);
+}
+
+function showIngSuggestions(idx,val){
+  filterIngSuggestions(idx,val);
+}
+
+function filterIngSuggestions(idx,val){
+  // also update ingRows name live as user types
+  ingRows[idx].name=val;
+  const sug=document.getElementById(`ing-sug-${idx}`);
+  if(!sug)return;
+  const q=(val||'').trim();
+  const matches=getIngSuggestions(q);
+  const exactMatch=stockItems.find(s=>s.name.toLowerCase()===(q).toLowerCase());
+
+  let html=matches.map(s=>`
+    <div class="ing-suggestion" onmousedown="selectIngredient(${idx},'${s.name.replace(/'/g,"\\'")}','${s.unit}')">
+      <span>${s.emoji||'🫙'}</span>
+      <span>${s.name}</span>
+      <span class="ing-suggestion-sub">${s.unit}</span>
+    </div>`).join('');
+
+  // show "Add as new" if typed something not in stock
+  if(q && !exactMatch){
+    html+=`<div class="ing-suggestion new-item" onmousedown="selectNewIngredient(${idx},'${q.replace(/'/g,"\\'")}')">
+      <span>✚</span>
+      <span>Add "<strong>${q}</strong>" as new</span>
+    </div>`;
   }
+
+  if(html){
+    sug.innerHTML=html;
+    sug.classList.add('open');
+  } else {
+    sug.classList.remove('open');
+  }
+}
+
+function selectIngredient(idx,name,unit){
+  ingRows[idx].name=name;
+  ingRows[idx].unit=unit;
+  hideIngSuggestions(idx);
+  renderIngList();
+}
+
+function selectNewIngredient(idx,name){
+  ingRows[idx].name=name;
+  hideIngSuggestions(idx);
+  renderIngList();
+}
+
+function hideIngSuggestions(idx){
+  const sug=document.getElementById(`ing-sug-${idx}`);
+  if(sug) sug.classList.remove('open');
 }
 
 function saveRecipe(){
@@ -981,33 +1052,6 @@ function renderEmojiGrid(gridId, emojis, key){
       el.querySelectorAll('.emoji-opt').forEach(s=>s.classList.toggle('sel',s===span));
     });
   });
-}
-
-function ingNameSelectHTML(idx, currentName){
-  const stockNames=stockItems.map(s=>s.name);
-  const isNew=currentName&&!stockNames.map(n=>n.toLowerCase()).includes(currentName.toLowerCase());
-  let opts=stockNames.map(n=>`<option value="${n}"${n===currentName?' selected':''}>${n}</option>`).join('');
-  opts+=`<option value="__new__"${isNew||!currentName?' selected':''}>✏️ New ingredient</option>`;
-  return`<select class="form-input ing-name-sel" data-idx="${idx}" onchange="handleIngNameChange(this,${idx})">${opts}</select>`;
-}
-
-function handleIngNameChange(sel,idx){
-  if(sel.value==='__new__'){
-    const val=prompt('Ingredient name:');
-    if(val&&val.trim()){
-      ingRows[idx].name=val.trim();
-    } else {
-      // revert to first stock item or keep blank
-      ingRows[idx].name=stockItems[0]?.name||'';
-    }
-    renderIngList();
-  } else {
-    ingRows[idx].name=sel.value;
-    // auto-fill unit from stock item
-    const match=stockItems.find(s=>s.name===sel.value);
-    if(match)ingRows[idx].unit=match.unit;
-    renderIngList();
-  }
 }
 
 function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
