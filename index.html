@@ -508,7 +508,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="picker-title">Choose recipe</div>
-    <div class="search-wrap" style="padding:0 0 12px"><input class="search-box" id="picker-search" type="search" placeholder="Search..." oninput="renderPickerList()"></div>
+    <div class="search-wrap" style="padding:0 0 8px"><input class="search-box" id="picker-search" type="search" placeholder="Search..." oninput="renderPickerList()"></div>
+    <div class="cats" id="picker-cats" style="padding:0 0 10px"></div>
     <div class="picker-list" id="picker-list"></div>
     <div class="sheet-actions"><button class="sheet-btn cancel" onclick="closeOverlay('picker-overlay')">Cancel</button></div>
   </div>
@@ -1106,18 +1107,36 @@ function renderPlanner(){
     </div>`;
   }).join('');
 }
+let pickerActiveCat='All';
+
 function openMealPicker(dk,meal){
   pickerContext={dk,meal};
+  pickerActiveCat='All';
   document.getElementById('picker-title').textContent=`Add to ${MEAL_LABELS[meal]}`;
   document.getElementById('picker-search').value='';
+  renderPickerCats();
   renderPickerList();
   document.getElementById('picker-overlay').classList.add('open');
 }
+
+function renderPickerCats(){
+  const cats=['All','⭐ Fav',...mealTypes];
+  document.getElementById('picker-cats').innerHTML=cats.map(c=>
+    `<button class="cat-pill${c===pickerActiveCat?' active':''}" onclick="pickerActiveCat='${c}';renderPickerCats();renderPickerList()">${c}</button>`
+  ).join('');
+}
+
 function renderPickerList(){
   const q=(document.getElementById('picker-search').value||'').toLowerCase();
   const dk=pickerContext?.dk,meal=pickerContext?.meal;
   const current=(planner[dk]||{})[meal]||[];
-  const f=recipes.filter(r=>r.name.toLowerCase().includes(q));
+  const f=recipes.filter(r=>{
+    const matchQ=r.name.toLowerCase().includes(q);
+    const matchCat=pickerActiveCat==='All'
+      ||(pickerActiveCat==='⭐ Fav'&&r.fav)
+      ||(pickerActiveCat.toLowerCase()===r.type.toLowerCase());
+    return matchQ&&matchCat;
+  });
   document.getElementById('picker-list').innerHTML=f.map(r=>{
     const sel=current.includes(r.id);
     return`<div class="picker-item" onclick="toggleMealItem('${dk}','${meal}',${r.id})">
