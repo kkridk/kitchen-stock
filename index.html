@@ -13,6 +13,22 @@
 :root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--card:#1e2235;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#f0f2ff;--text2:#8b90a8;--text3:#555a72;--accent:#4f7cff;--accent2:#3d6aee;--green:#2dce7a;--amber:#f5a623;--red:#f5445a;--purple:#a855f7;--r:16px;--rs:10px;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden;}
+/* PASSCODE SCREEN */
+#passcode-screen{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
+#passcode-screen.hidden{display:none;}
+.pc-logo{font-size:52px;margin-bottom:16px;}
+.pc-title{font-size:22px;font-weight:700;margin-bottom:6px;}
+.pc-sub{font-size:14px;color:var(--text2);margin-bottom:36px;}
+.pc-dots{display:flex;gap:14px;margin-bottom:32px;}
+.pc-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all 0.15s;}
+.pc-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pc-dot.error{background:var(--red);border-color:var(--red);}
+.pc-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:280px;}
+.pc-key{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 0;font-size:22px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.1s;color:var(--text);}
+.pc-key:active{background:var(--bg3);transform:scale(0.95);}
+.pc-key.del{font-size:18px;color:var(--text2);}
+.pc-key.empty{background:transparent;border-color:transparent;pointer-events:none;}
+.pc-error{font-size:13px;color:var(--red);margin-top:16px;min-height:18px;}
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:50;background:rgba(15,17,23,0.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
 .topbar-title{font-size:18px;font-weight:700;}
@@ -217,9 +233,50 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .custom-add-row input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:14px;color:var(--text);outline:none;}
 .custom-add-row input:focus{border-color:var(--accent);}
 .custom-add-row button{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;cursor:pointer;}
+/* SETTINGS */
+.settings-wrap{padding:16px 14px 32px;}
+.settings-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:8px;}
+.danger-card{border-color:rgba(245,68,90,0.2);}
+.settings-row{display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;transition:background 0.1s;}
+.settings-row:active{background:var(--bg3);}
+.settings-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0;}
+.settings-info{flex:1;}
+.settings-label{font-size:14px;font-weight:500;}
+.settings-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.settings-arrow{font-size:18px;color:var(--text3);}
+.settings-divider{height:1px;background:var(--border);margin:0 16px;}
 </style>
 </head>
 <body>
+<!-- PASSCODE SCREEN -->
+<div id="passcode-screen">
+  <div class="pc-logo">🧊</div>
+  <div class="pc-title">Kitchen Stock</div>
+  <div class="pc-sub">Enter passcode to unlock</div>
+  <div class="pc-dots" id="pc-dots">
+    <div class="pc-dot" id="pc-d0"></div>
+    <div class="pc-dot" id="pc-d1"></div>
+    <div class="pc-dot" id="pc-d2"></div>
+    <div class="pc-dot" id="pc-d3"></div>
+    <div class="pc-dot" id="pc-d4"></div>
+    <div class="pc-dot" id="pc-d5"></div>
+  </div>
+  <div class="pc-keypad">
+    <button class="pc-key" onclick="pcKey('1')">1</button>
+    <button class="pc-key" onclick="pcKey('2')">2</button>
+    <button class="pc-key" onclick="pcKey('3')">3</button>
+    <button class="pc-key" onclick="pcKey('4')">4</button>
+    <button class="pc-key" onclick="pcKey('5')">5</button>
+    <button class="pc-key" onclick="pcKey('6')">6</button>
+    <button class="pc-key" onclick="pcKey('7')">7</button>
+    <button class="pc-key" onclick="pcKey('8')">8</button>
+    <button class="pc-key" onclick="pcKey('9')">9</button>
+    <button class="pc-key empty"></button>
+    <button class="pc-key" onclick="pcKey('0')">0</button>
+    <button class="pc-key del" onclick="pcDel()">⌫</button>
+  </div>
+  <div class="pc-error" id="pc-error"></div>
+</div>
 <div class="topbar">
   <div><div class="topbar-title" id="topbar-title">🧊 Kitchen Stock</div><div class="topbar-sub" id="topbar-sub">Loading...</div></div>
   <button class="add-btn" id="add-btn" onclick="handleAdd()">+</button>
@@ -316,6 +373,65 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   <div id="tab-history" style="display:none">
     <div class="hist-tab"><div class="sec-lbl" style="padding:0 0 10px">Recent activity</div><div id="history-list"></div></div>
   </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" style="display:none">
+    <div class="settings-wrap">
+      <div class="sec-lbl">Data backup</div>
+
+      <div class="settings-card">
+        <div class="settings-row" onclick="exportData()">
+          <div class="settings-icon">📤</div>
+          <div class="settings-info">
+            <div class="settings-label">Export backup</div>
+            <div class="settings-sub">Download all data as a JSON file</div>
+          </div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-divider"></div>
+        <div class="settings-row" onclick="document.getElementById('import-file').click()">
+          <div class="settings-icon">📥</div>
+          <div class="settings-info">
+            <div class="settings-label">Import backup</div>
+            <div class="settings-sub">Restore from a JSON backup file</div>
+          </div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
+
+      <div class="sec-lbl" style="margin-top:20px">About</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div class="settings-icon">🧊</div>
+          <div class="settings-info">
+            <div class="settings-label">Kitchen Stock</div>
+            <div class="settings-sub" id="settings-data-summary">Loading...</div>
+          </div>
+        </div>
+        <div class="settings-divider"></div>
+        <div class="settings-row">
+          <div class="settings-icon">💾</div>
+          <div class="settings-info">
+            <div class="settings-label">Storage</div>
+            <div class="settings-sub">All data stored locally on this device</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-lbl" style="margin-top:20px">Danger zone</div>
+      <div class="settings-card danger-card">
+        <div class="settings-row" onclick="resetAllData()">
+          <div class="settings-icon">🗑️</div>
+          <div class="settings-info">
+            <div class="settings-label" style="color:var(--red)">Reset all data</div>
+            <div class="settings-sub">Delete everything and start fresh</div>
+          </div>
+          <div class="settings-arrow">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <nav class="bottom-nav">
@@ -325,6 +441,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   <button class="nav-item" id="nav-planner" onclick="switchTab('planner')"><span class="nav-icon">📅</span>Planner</button>
   <button class="nav-item" id="nav-shopping" onclick="switchTab('shopping')"><span class="nav-icon">🛒</span>Shopping</button>
   <button class="nav-item" id="nav-history" onclick="switchTab('history')"><span class="nav-icon">📋</span>Log</button>
+  <button class="nav-item" id="nav-settings" onclick="switchTab('settings')"><span class="nav-icon">⚙️</span>Settings</button>
 </nav>
 
 <!-- STOCK SHEET -->
@@ -343,7 +460,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     </div>
     <div class="two-col">
       <div class="form-field"><label class="form-label">Quantity</label><input class="form-input" id="sf-qty" type="number" min="0" value="1"></div>
-      <div class="form-field"><label class="form-label">Unit</label><input class="form-input" id="sf-unit" type="text" value="pcs"></div>
+      <div class="form-field"><label class="form-label">Unit</label>
+        <select class="form-select" id="sf-unit" onchange="handleStockUnitChange(this)"></select>
+      </div>
     </div>
     <div class="form-field"><label class="form-label">Low stock alert at</label><input class="form-input" id="sf-low" type="number" min="0" value="2"></div>
     <div class="form-field"><label class="form-label">Barcode (optional)</label><input class="form-input" id="sf-barcode" type="text" placeholder="Scan or type"></div>
@@ -482,15 +601,14 @@ function toast(msg,type='ok'){const t=document.getElementById('toast');t.textCon
 
 // ── TABS ──────────────────────────────────────────────
 let activeTab='stock';
-const TABS=['stock','scan','recipes','planner','shopping','history'];
+const TABS=['stock','scan','recipes','planner','shopping','history','settings'];
 function switchTab(t){
   activeTab=t;
   TABS.forEach(tab=>{
     document.getElementById('tab-'+tab).style.display=tab===t?'':'none';
     document.getElementById('nav-'+tab).classList.toggle('active',tab===t);
   });
-  const titles={stock:'🧊 Kitchen Stock',scan:'📡 Scan / NFC',recipes:'🍽️ Recipes',planner:'📅 Meal Planner',shopping:'🛒 Shopping List',history:'📋 Activity Log'};
-  const subs={stock:'',scan:'Tap or scan to deduct stock',recipes:'Your saved recipes',planner:'Plan your week',shopping:'What to buy',history:''};
+  const titles={stock:'🧊 Kitchen Stock',scan:'📡 Scan / NFC',recipes:'🍽️ Recipes',planner:'📅 Meal Planner',shopping:'🛒 Shopping List',history:'📋 Activity Log',settings:'⚙️ Settings'};
   document.getElementById('topbar-title').textContent=titles[t];
   document.getElementById('add-btn').style.display=['stock','recipes'].includes(t)?'flex':'none';
   if(t==='stock'){document.getElementById('topbar-sub').textContent='';renderStockStats();}
@@ -499,9 +617,69 @@ function switchTab(t){
   if(t==='planner'){renderPlanner();}
   if(t==='shopping'){renderShopping();}
   if(t==='history'){renderHistory();}
+  if(t==='settings'){renderSettings();}
   if(t!=='scan'&&cameraStream)stopCamera();
 }
 function handleAdd(){if(activeTab==='stock')openStockSheet();else if(activeTab==='recipes')openRecipeSheet();}
+
+// ── SETTINGS / BACKUP ──────────────────────────────────────────────
+function renderSettings(){
+  document.getElementById('settings-data-summary').textContent=
+    `${stockItems.length} stock items · ${recipes.length} recipes · ${Object.keys(planner).length} planned days`;
+}
+
+function exportData(){
+  const data={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    stockItems,recipes,planner,shopChecked,history,
+    stockCategories,mealTypes,customUnits
+  };
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url; a.download=`kitchen-backup-${date}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Backup downloaded ✓');
+}
+
+function importData(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      // validate it looks like our backup
+      if(!data.stockItems||!data.recipes){toast('Invalid backup file','err');return;}
+      if(!confirm(`Import backup from ${data.exportedAt?.slice(0,10)||'unknown date'}?\n\nThis will REPLACE all current data.`)){input.value='';return;}
+      stockItems=data.stockItems||[];
+      recipes=data.recipes||[];
+      planner=data.planner||{};
+      shopChecked=data.shopChecked||{};
+      history=data.history||[];
+      stockCategories=data.stockCategories||['Produce','Dairy','Protein','Pantry','Frozen','Drinks','Snacks'];
+      mealTypes=data.mealTypes||['Any','Breakfast','Lunch','Dinner','Snack'];
+      customUnits=data.customUnits||[];
+      stockNextId=Math.max(0,...stockItems.map(i=>i.id))+1;
+      recipeNextId=Math.max(0,...recipes.map(r=>r.id))+1;
+      saveAll(); renderStockAll(); renderSettings();
+      toast(`Imported: ${stockItems.length} items, ${recipes.length} recipes`);
+    }catch(err){toast('Could not read file','err');}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function resetAllData(){
+  if(!confirm('Reset ALL data?\n\nThis deletes all stock items, recipes, planner and history. This cannot be undone.'))return;
+  if(!confirm('Are you sure? All data will be permanently deleted.'))return;
+  ['ks_items','ks_recipes','ks_planner','ks_shop_checked','ks_history','ks_cats','ks_meal_types','ks_units']
+    .forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
 
 // ── STOCK ──────────────────────────────────────────────
 let stockActiveCat='All';
@@ -586,14 +764,38 @@ function addCustomStockCat(){
   document.getElementById('sf-cat-addrow').style.display='none';
   renderStockCatChips();renderStockCats();
 }
+function populateStockUnitSelect(selected){
+  const sel=document.getElementById('sf-unit');
+  const units=allUnits();
+  sel.innerHTML=units.map(u=>`<option value="${u}"${u===selected?' selected':''}>${u}</option>`).join('')
+    +`<option value="__custom__">+ New unit</option>`;
+}
+function handleStockUnitChange(sel){
+  if(sel.value==='__custom__'){
+    const val=prompt('New unit (e.g. ต้น, ใบ, หัว):');
+    if(val&&val.trim()){
+      const u=val.trim();
+      if(!customUnits.includes(u))customUnits.push(u);
+      saveAll();
+      populateStockUnitSelect(u);
+    } else {
+      populateStockUnitSelect(allUnits()[0]);
+    }
+  }
+}
+function getStockUnit(){
+  const sel=document.getElementById('sf-unit');
+  return sel.value==='__custom__'?allUnits()[0]:sel.value;
+}
+
 function openStockSheet(){
   stockEditId=null; emojiSel.stock='🥚'; sfSelCat=stockCategories[0]||'Produce';
   document.getElementById('stock-sheet-title').textContent='Add Item';
   document.getElementById('sf-name').value=''; document.getElementById('sf-qty').value='1';
-  document.getElementById('sf-unit').value='pcs'; document.getElementById('sf-low').value='2';
-  document.getElementById('sf-barcode').value='';
+  document.getElementById('sf-low').value='2'; document.getElementById('sf-barcode').value='';
   document.getElementById('sf-cat-addrow').style.display='none';
   document.getElementById('stock-del-btn').style.display='none';
+  populateStockUnitSelect('pcs');
   renderStockCatChips(); renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stock');
   document.getElementById('stock-overlay').classList.add('open');
 }
@@ -603,16 +805,16 @@ function openStockEditSheet(id){
   if(!stockCategories.includes(sfSelCat))stockCategories.push(sfSelCat);
   document.getElementById('stock-sheet-title').textContent='Edit Item';
   document.getElementById('sf-name').value=item.name; document.getElementById('sf-qty').value=item.qty;
-  document.getElementById('sf-unit').value=item.unit; document.getElementById('sf-low').value=item.low;
-  document.getElementById('sf-barcode').value=item.barcode||'';
+  document.getElementById('sf-low').value=item.low; document.getElementById('sf-barcode').value=item.barcode||'';
   document.getElementById('sf-cat-addrow').style.display='none';
   document.getElementById('stock-del-btn').style.display='';
+  populateStockUnitSelect(item.unit);
   renderStockCatChips(); renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stock');
   document.getElementById('stock-overlay').classList.add('open');
 }
 function saveStockItem(){
   const name=document.getElementById('sf-name').value.trim(); if(!name){toast('Enter a name','err');return;}
-  const data={emoji:emojiSel.stock,name,category:sfSelCat,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};
+  const data={emoji:emojiSel.stock,name,category:sfSelCat,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:getStockUnit(),low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};
   if(stockEditId){const item=stockItems.find(i=>i.id===stockEditId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}
   else{stockItems.push({id:stockNextId++,...data,nfc:''});addHist('add',`Added ${name}`);}
   saveAll(); closeOverlay('stock-overlay'); renderStockAll(); toast(stockEditId?'Updated':'Item added');
@@ -947,8 +1149,8 @@ function setPeriod(n){
 }
 function renderShopping(){
   const today=new Date();today.setHours(0,0,0,0);
-  // gather all recipe IDs in the period
-  const needed={}; // {ingredientName: {amount, unit, recipes:[]}}
+  // gather all ingredient needs across planned meals
+  const needed={}; // key=name.lower: {name,amounts:[{amt,unit}],recipes:[]}
   for(let d=0;d<shopPeriod;d++){
     const dd=new Date(today);dd.setDate(today.getDate()+d);
     const dk=dateKey(dd);
@@ -958,8 +1160,8 @@ function renderShopping(){
         const recipe=recipes.find(r=>r.id===rid);if(!recipe)return;
         recipe.ingredients.forEach(ing=>{
           const key=ing.name.toLowerCase();
-          if(!needed[key])needed[key]={name:ing.name,amount:0,unit:ing.unit,recipes:[]};
-          needed[key].amount+=ing.amount;
+          if(!needed[key])needed[key]={name:ing.name,amounts:[],recipes:[]};
+          needed[key].amounts.push({amt:ing.amount,unit:ing.unit});
           if(!needed[key].recipes.includes(recipe.name))needed[key].recipes.push(recipe.name);
         });
       });
@@ -969,16 +1171,32 @@ function renderShopping(){
   if(!Object.keys(needed).length){
     el.innerHTML=`<div class="empty-msg">No meals planned for this period.<br>Go to 📅 Planner to add meals first.</div>`;return;
   }
-  // match against stock
+
   const toBuy=[],haveEnough=[];
   Object.values(needed).forEach(ing=>{
-    // try to find matching stock item (fuzzy name match)
-    const stockMatch=stockItems.find(s=>s.name.toLowerCase()===ing.name.toLowerCase()||ing.name.toLowerCase().includes(s.name.toLowerCase()));
-    const inStock=stockMatch?stockMatch.qty:0;
-    const stockUnit=stockMatch?stockMatch.unit:ing.unit;
-    const need=ing.amount;
-    if(stockMatch&&inStock>=need){haveEnough.push({...ing,inStock,stockUnit,stockMatch});}
-    else{toBuy.push({...ing,inStock,stockUnit,shortage:need-(stockMatch?inStock:0),stockMatch});}
+    const stockMatch=stockItems.find(s=>s.name.toLowerCase()===ing.name.toLowerCase());
+    // collapse all amounts — try to sum in a common unit
+    // use first unit as reference
+    const refUnit=ing.amounts[0]?.unit||'g';
+    let totalNeed=0;
+    ing.amounts.forEach(a=>{
+      const c=convertUnit(a.amt,a.unit,refUnit);
+      totalNeed+=c!==null?c:a.amt;
+    });
+
+    if(!stockMatch){
+      toBuy.push({name:ing.name,need:totalNeed,needUnit:refUnit,have:0,stockUnit:refUnit,shortage:totalNeed,compatible:true,recipes:ing.recipes});
+      return;
+    }
+
+    const {need,have,unit,compatible}=compareUnits(totalNeed,refUnit,stockMatch.qty,stockMatch.unit);
+    if(compatible&&have>=need){
+      haveEnough.push({name:ing.name,need,have,unit,stockUnit:stockMatch.unit,recipes:ing.recipes,compatible});
+    } else {
+      const shortage=compatible?Math.max(0,need-have):totalNeed;
+      const shortUnit=compatible?unit:refUnit;
+      toBuy.push({name:ing.name,need,have:compatible?have:stockMatch.qty,needUnit:unit,stockUnit:stockMatch.unit,shortage,compatible,recipes:ing.recipes});
+    }
   });
 
   let html='';
@@ -986,15 +1204,16 @@ function renderShopping(){
     html+=`<div class="shop-section"><div class="shop-section-title">🛒 Need to buy (${toBuy.length})</div>`;
     html+=toBuy.map(ing=>{
       const ck=shopChecked[ing.name.toLowerCase()]?'checked':'';
+      const convNote=ing.compatible&&ing.stockUnit&&ing.stockUnit!==ing.needUnit
+        ?`<span style="font-size:10px;color:var(--text3)"> (converted from ${ing.stockUnit})</span>`:'' ;
       return`<div class="shop-item${ck?' have':''}">
-        <div class="shop-check ${ck}" onclick="toggleShopCheck('${ing.name.toLowerCase()}')">
-          ${ck?'✓':''}
-        </div>
+        <div class="shop-check ${ck}" onclick="toggleShopCheck('${ing.name.toLowerCase()}')">${ck?'✓':''}</div>
         <div class="shop-name">${ing.name}<br><span style="font-size:11px;color:var(--text3)">${ing.recipes.join(', ')}</span></div>
         <div class="shop-qty">
-          <div>${ing.amount} ${ing.unit}</div>
-          ${ing.inStock>0?`<div class="shop-stock">Have ${ing.inStock}</div>`:''}
-          <div class="shop-need">Buy ${ing.shortage.toFixed(1)} ${ing.unit}</div>
+          <div style="font-size:12px">Need ${fmtNum(ing.need)} ${ing.needUnit}</div>
+          ${ing.have>0?`<div class="shop-stock">Have ${fmtNum(ing.have)} ${ing.needUnit}${convNote}</div>`:''}
+          <div class="shop-need">Buy ${fmtNum(ing.shortage)} ${ing.needUnit}</div>
+          ${!ing.compatible?`<div style="font-size:10px;color:var(--text3)">⚠️ Different units</div>`:''}
         </div>
       </div>`;
     }).join('');
@@ -1002,11 +1221,17 @@ function renderShopping(){
   }
   if(haveEnough.length){
     html+=`<div class="shop-section"><div class="shop-section-title">✅ Already have (${haveEnough.length})</div>`;
-    html+=haveEnough.map(ing=>`<div class="shop-item have">
-      <div class="shop-check checked">✓</div>
-      <div class="shop-name">${ing.name}</div>
-      <div class="shop-qty"><div>${ing.amount} ${ing.unit}</div><div class="shop-stock">In stock: ${ing.inStock} ${ing.stockUnit}</div></div>
-    </div>`).join('');
+    html+=haveEnough.map(ing=>{
+      const convNote=ing.stockUnit&&ing.stockUnit!==ing.unit?` (stock: ${fmtNum(ing.have)} ${ing.stockUnit})`:'';
+      return`<div class="shop-item have">
+        <div class="shop-check checked">✓</div>
+        <div class="shop-name">${ing.name}</div>
+        <div class="shop-qty">
+          <div style="font-size:12px">Need ${fmtNum(ing.need)} ${ing.unit}</div>
+          <div class="shop-stock">In stock${convNote||`: ${fmtNum(ing.have)} ${ing.unit}`}</div>
+        </div>
+      </div>`;
+    }).join('');
     html+='</div>';
   }
   el.innerHTML=html;
@@ -1055,6 +1280,76 @@ function renderEmojiGrid(gridId, emojis, key){
 }
 
 function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
+
+// ── PASSCODE ──────────────────────────────────────────────
+const PASSCODE='161161';
+let pcInput='';
+function pcKey(d){
+  if(pcInput.length>=6)return;
+  pcInput+=d;
+  updatePcDots();
+  if(pcInput.length===6) setTimeout(pcCheck,120);
+}
+function pcDel(){
+  pcInput=pcInput.slice(0,-1);
+  document.getElementById('pc-error').textContent='';
+  updatePcDots();
+}
+function updatePcDots(){
+  for(let i=0;i<6;i++){
+    const dot=document.getElementById('pc-d'+i);
+    dot.classList.toggle('filled',i<pcInput.length);
+    dot.classList.remove('error');
+  }
+}
+function pcCheck(){
+  if(pcInput===PASSCODE){
+    document.getElementById('passcode-screen').classList.add('hidden');
+  } else {
+    for(let i=0;i<6;i++)document.getElementById('pc-d'+i).classList.add('error');
+    document.getElementById('pc-error').textContent='Incorrect passcode';
+    setTimeout(()=>{pcInput='';updatePcDots();document.getElementById('pc-error').textContent='';},900);
+  }
+}
+
+// ── UNIT CONVERSION ──────────────────────────────────────────────
+// conversion table: all values to a common base unit
+const UNIT_GROUPS=[
+  {base:'g',  units:{g:1,kg:1000,mg:0.001}},
+  {base:'ml', units:{ml:1,l:1000,L:1000,cup:240,tbsp:15,tsp:5,'fl oz':30}},
+  {base:'pcs',units:{pcs:1,piece:1,pieces:1}},
+];
+
+// convert amount from one unit to another — returns null if not compatible
+function convertUnit(amount,fromUnit,toUnit){
+  if(fromUnit===toUnit)return amount;
+  for(const grp of UNIT_GROUPS){
+    const f=grp.units[fromUnit],t=grp.units[toUnit];
+    if(f&&t) return amount*f/t;
+  }
+  return null; // incompatible units
+}
+
+// convert ingredient amount to stock base unit for comparison
+// returns {inStockBase, needBase, compatible}
+function compareUnits(needAmt,needUnit,stockAmt,stockUnit){
+  if(needUnit===stockUnit) return{need:needAmt,have:stockAmt,unit:stockUnit,compatible:true};
+  const converted=convertUnit(needAmt,needUnit,stockUnit);
+  if(converted!==null) return{need:converted,have:stockAmt,unit:stockUnit,compatible:true};
+  // try reverse: convert stock to recipe unit
+  const cvStock=convertUnit(stockAmt,stockUnit,needUnit);
+  if(cvStock!==null) return{need:needAmt,have:cvStock,unit:needUnit,compatible:true};
+  // incompatible — return as-is
+  return{need:needAmt,have:stockAmt,unit:needUnit,compatible:false};
+}
+
+function fmtNum(n){
+  if(n===0)return'0';
+  if(n<0.01)return n.toFixed(3);
+  if(n<1)return n.toFixed(2).replace(/\.?0+$/,'');
+  if(Number.isInteger(n))return String(n);
+  return n.toFixed(1).replace(/\.0$/,'');
+}
 
 // ── INIT ──────────────────────────────────────────────
 renderStockAll();
