@@ -81,7 +81,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .week-label{font-size:14px;font-weight:600;}
 .week-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 14px;font-size:13px;cursor:pointer;}
 .day-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+.day-card.today-card{border:2px solid var(--accent);background:rgba(79,124,255,0.04);}
 .day-header{padding:10px 14px;background:var(--bg3);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.day-card.today-card .day-header{background:rgba(79,124,255,0.18);}
+.today-pill{display:inline-block;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;letter-spacing:0.3px;}
 .day-today{color:var(--accent);}
 .meal-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--border);}
 .meal-label{font-size:11px;color:var(--text2);width:58px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;}
@@ -187,6 +190,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .toast.ok{border-color:var(--green);color:var(--green);}
 .toast.err{border-color:var(--red);color:var(--red);}
 .toast.warn{border-color:var(--amber);color:var(--amber);}
+/* CUSTOM TAG CHIPS */
+.tag-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
+.tag-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;transition:all 0.15s;}
+.tag-chip.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+.tag-chip-del{font-size:14px;line-height:1;color:inherit;opacity:0.7;margin-left:2px;}
+.tag-chip-add{border-style:dashed;color:var(--text3);}
+.custom-add-row{display:flex;gap:7px;margin-top:6px;}
+.custom-add-row input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:14px;color:var(--text);outline:none;}
+.custom-add-row input:focus{border-color:var(--accent);}
+.custom-add-row button{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -305,7 +318,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     <div class="form-field"><label class="form-label">Emoji</label><div class="emoji-grid" id="stock-emoji-grid"></div></div>
     <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="sf-name" type="text" placeholder="e.g. Eggs"></div>
     <div class="form-field"><label class="form-label">Category</label>
-      <select class="form-select" id="sf-cat"><option>Produce</option><option>Dairy</option><option>Protein</option><option>Pantry</option><option>Frozen</option><option>Drinks</option><option>Snacks</option></select>
+      <div class="tag-chips" id="sf-cat-chips"></div>
+      <div class="custom-add-row" id="sf-cat-addrow" style="display:none">
+        <input id="sf-cat-input" placeholder="New category name..." onkeydown="if(event.key==='Enter')addCustomStockCat()">
+        <button onclick="addCustomStockCat()">Add</button>
+      </div>
     </div>
     <div class="two-col">
       <div class="form-field"><label class="form-label">Quantity</label><input class="form-input" id="sf-qty" type="number" min="0" value="1"></div>
@@ -329,7 +346,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     <div class="form-field"><label class="form-label">Emoji</label><div class="emoji-grid" id="recipe-emoji-grid"></div></div>
     <div class="form-field"><label class="form-label">Recipe Name</label><input class="form-input" id="rf-name" type="text" placeholder="e.g. Pad Thai"></div>
     <div class="form-field"><label class="form-label">Meal type</label>
-      <select class="form-select" id="rf-type"><option value="any">Any</option><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snack">Snack</option></select>
+      <div class="tag-chips" id="rf-type-chips"></div>
+      <div class="custom-add-row" id="rf-type-addrow" style="display:none">
+        <input id="rf-type-input" placeholder="New meal type..." onkeydown="if(event.key==='Enter')addCustomMealType()">
+        <button onclick="addCustomMealType()">Add</button>
+      </div>
     </div>
     <div class="form-field"><label class="form-label">Servings</label><input class="form-input" id="rf-servings" type="number" min="1" value="2"></div>
     <div class="form-field">
@@ -363,8 +384,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 // ── DATA ──────────────────────────────────────────────
 const EMOJIS_STOCK=['🥚','🥛','🧀','🥩','🍗','🐟','🥦','🥕','🧅','🍅','🌽','🍋','🍎','🍌','🫙','🧈','🥫','🍞','🧂','🫒','🧄','🍚','🍜','🧃','🥤','🧊','🍫','🥐','🫐','🥣','🧆','🫚','🧋','🫖'];
 const EMOJIS_RECIPE=['🍜','🍛','🍲','🥘','🍝','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍟','🍕','🥞','🧇','🍳','🥚','🍱','🫕','🍢','🍡','🧆','🥧','🎂','🍰','🧁','🍩','🍪'];
-const MEAL_TYPES={any:'Any',breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack'};
-const MEAL_TYPE_CLASS={any:'tb-an',breakfast:'tb-bf',lunch:'tb-lu',dinner:'tb-di',snack:'tb-sn'};
+
+// custom categories & meal types (persisted)
+let stockCategories=JSON.parse(localStorage.getItem('ks_cats')||'null')||['Produce','Dairy','Protein','Pantry','Frozen','Drinks','Snacks'];
+let mealTypes=JSON.parse(localStorage.getItem('ks_meal_types')||'null')||['Any','Breakfast','Lunch','Dinner','Snack'];
+
+// current selection state for sheets
+let sfSelCat='Produce';
+let rfSelType='any';
+
 const MEALS=['breakfast','lunch','dinner'];
 const MEAL_LABELS={breakfast:'Morning',lunch:'Lunch',dinner:'Dinner'};
 
@@ -395,6 +423,8 @@ function saveAll(){
   localStorage.setItem('ks_planner',JSON.stringify(planner));
   localStorage.setItem('ks_shop_checked',JSON.stringify(shopChecked));
   localStorage.setItem('ks_history',JSON.stringify(history.slice(0,100)));
+  localStorage.setItem('ks_cats',JSON.stringify(stockCategories));
+  localStorage.setItem('ks_meal_types',JSON.stringify(mealTypes));
 }
 function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});saveAll();}
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2200);}
@@ -466,9 +496,77 @@ function changeQty(id,d){
 }
 
 // stock sheet
-function openStockSheet(){stockEditId=null;stockSelEmoji='🥚';document.getElementById('stock-sheet-title').textContent='Add Item';document.getElementById('sf-name').value='';document.getElementById('sf-qty').value='1';document.getElementById('sf-unit').value='pcs';document.getElementById('sf-low').value='2';document.getElementById('sf-barcode').value='';document.getElementById('sf-cat').value='Produce';document.getElementById('stock-del-btn').style.display='none';renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');document.getElementById('stock-overlay').classList.add('open');}
-function openStockEditSheet(id){const item=stockItems.find(i=>i.id===id);if(!item)return;stockEditId=id;stockSelEmoji=item.emoji;document.getElementById('stock-sheet-title').textContent='Edit Item';document.getElementById('sf-name').value=item.name;document.getElementById('sf-qty').value=item.qty;document.getElementById('sf-unit').value=item.unit;document.getElementById('sf-low').value=item.low;document.getElementById('sf-barcode').value=item.barcode||'';document.getElementById('sf-cat').value=item.category;document.getElementById('stock-del-btn').style.display='';renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');document.getElementById('stock-overlay').classList.add('open');}
-function saveStockItem(){const name=document.getElementById('sf-name').value.trim();if(!name){toast('Enter a name','err');return;}const data={emoji:stockSelEmoji,name,category:document.getElementById('sf-cat').value,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};if(stockEditId){const item=stockItems.find(i=>i.id===stockEditId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}else{stockItems.push({id:stockNextId++,...data,nfc:''});addHist('add',`Added ${name}`);}saveAll();closeOverlay('stock-overlay');renderStockAll();toast(stockEditId?'Updated':'Item added');}
+function renderStockCatChips(){
+  const el=document.getElementById('sf-cat-chips');
+  el.innerHTML=stockCategories.map(c=>`
+    <div class="tag-chip${c===sfSelCat?' selected':''}" data-cat="${c}">
+      ${c}
+      <span class="tag-chip-del" data-del-cat="${c}" title="Delete">×</span>
+    </div>`).join('')+
+    `<div class="tag-chip tag-chip-add" id="sf-cat-add-btn">+ New</div>`;
+  el.querySelectorAll('.tag-chip[data-cat]').forEach(chip=>{
+    chip.addEventListener('click',e=>{
+      if(e.target.dataset.delCat)return;
+      sfSelCat=chip.dataset.cat;renderStockCatChips();
+    });
+  });
+  el.querySelectorAll('[data-del-cat]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const c=btn.dataset.delCat;
+      if(stockCategories.length<=1){toast('Need at least one category','err');return;}
+      stockCategories=stockCategories.filter(x=>x!==c);
+      if(sfSelCat===c)sfSelCat=stockCategories[0];
+      saveAll();renderStockCatChips();renderStockCats();
+    });
+  });
+  const addBtn=document.getElementById('sf-cat-add-btn');
+  if(addBtn)addBtn.addEventListener('click',()=>{
+    const row=document.getElementById('sf-cat-addrow');
+    row.style.display=row.style.display==='none'?'flex':'none';
+    if(row.style.display==='flex')document.getElementById('sf-cat-input').focus();
+  });
+}
+function addCustomStockCat(){
+  const val=document.getElementById('sf-cat-input').value.trim();
+  if(!val)return;
+  if(!stockCategories.includes(val))stockCategories.push(val);
+  sfSelCat=val;saveAll();
+  document.getElementById('sf-cat-input').value='';
+  document.getElementById('sf-cat-addrow').style.display='none';
+  renderStockCatChips();renderStockCats();
+}
+function openStockSheet(){
+  stockEditId=null;stockSelEmoji='🥚';sfSelCat=stockCategories[0]||'Produce';
+  document.getElementById('stock-sheet-title').textContent='Add Item';
+  document.getElementById('sf-name').value='';document.getElementById('sf-qty').value='1';
+  document.getElementById('sf-unit').value='pcs';document.getElementById('sf-low').value='2';
+  document.getElementById('sf-barcode').value='';
+  document.getElementById('sf-cat-addrow').style.display='none';
+  document.getElementById('stock-del-btn').style.display='none';
+  renderStockCatChips();renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');
+  document.getElementById('stock-overlay').classList.add('open');
+}
+function openStockEditSheet(id){
+  const item=stockItems.find(i=>i.id===id);if(!item)return;
+  stockEditId=id;stockSelEmoji=item.emoji;sfSelCat=item.category;
+  if(!stockCategories.includes(sfSelCat))stockCategories.push(sfSelCat);
+  document.getElementById('stock-sheet-title').textContent='Edit Item';
+  document.getElementById('sf-name').value=item.name;document.getElementById('sf-qty').value=item.qty;
+  document.getElementById('sf-unit').value=item.unit;document.getElementById('sf-low').value=item.low;
+  document.getElementById('sf-barcode').value=item.barcode||'';
+  document.getElementById('sf-cat-addrow').style.display='none';
+  document.getElementById('stock-del-btn').style.display='';
+  renderStockCatChips();renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');
+  document.getElementById('stock-overlay').classList.add('open');
+}
+function saveStockItem(){
+  const name=document.getElementById('sf-name').value.trim();if(!name){toast('Enter a name','err');return;}
+  const data={emoji:stockSelEmoji,name,category:sfSelCat,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};
+  if(stockEditId){const item=stockItems.find(i=>i.id===stockEditId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}
+  else{stockItems.push({id:stockNextId++,...data,nfc:''});addHist('add',`Added ${name}`);}
+  saveAll();closeOverlay('stock-overlay');renderStockAll();toast(stockEditId?'Updated':'Item added');
+}
 function deleteStockItem(){if(!stockEditId)return;const item=stockItems.find(i=>i.id===stockEditId);if(!item||!confirm(`Delete ${item.name}?`))return;stockItems=stockItems.filter(i=>i.id!==stockEditId);addHist('remove',`Deleted ${item.name}`);saveAll();closeOverlay('stock-overlay');renderStockAll();toast('Deleted','warn');}
 function renderStockAll(){renderStockStats();renderStockCats();renderStock();}
 
@@ -477,16 +575,20 @@ let recipeActiveCat='All';
 let recipeEditId=null;
 let recipeSelEmoji='🍜';
 
-const RECIPE_CATS=['All','Any','Breakfast','Lunch','Dinner','Snack','Favourites'];
+function getMealTypeClass(type){
+  const map={any:'tb-an',breakfast:'tb-bf',lunch:'tb-lu',dinner:'tb-di',snack:'tb-sn'};
+  return map[type.toLowerCase()]||'tb-an';
+}
 function renderRecipeCats(){
-  document.getElementById('recipe-cats').innerHTML=RECIPE_CATS.map(c=>`<button class="cat-pill${c===recipeActiveCat?' active':''}" onclick="recipeSetCat('${c}')">${c}</button>`).join('');
+  const cats=['All','Favourites',...mealTypes];
+  document.getElementById('recipe-cats').innerHTML=cats.map(c=>`<button class="cat-pill${c===recipeActiveCat?' active':''}" onclick="recipeSetCat('${c}')">${c}</button>`).join('');
 }
 function recipeSetCat(c){recipeActiveCat=c;renderRecipes();}
 function renderRecipes(){
   const q=(document.getElementById('recipe-search').value||'').toLowerCase();
   let f=recipes.filter(r=>{
     const matchQ=r.name.toLowerCase().includes(q);
-    const matchCat=recipeActiveCat==='All'||(recipeActiveCat==='Favourites'&&r.fav)||(recipeActiveCat.toLowerCase()===r.type);
+    const matchCat=recipeActiveCat==='All'||(recipeActiveCat==='Favourites'&&r.fav)||(recipeActiveCat.toLowerCase()===r.type.toLowerCase());
     return matchQ&&matchCat;
   });
   const el=document.getElementById('recipe-list');
@@ -494,7 +596,7 @@ function renderRecipes(){
   el.innerHTML=f.map(r=>`<div class="recipe-row" onclick="openRecipeEditSheet(${r.id})">
     <div class="recipe-emoji">${r.emoji}</div>
     <div class="recipe-info">
-      <div class="recipe-name">${r.name}<span class="type-badge ${MEAL_TYPE_CLASS[r.type]||'tb-an'}">${MEAL_TYPES[r.type]||r.type}</span></div>
+      <div class="recipe-name">${r.name}<span class="type-badge ${getMealTypeClass(r.type)}">${r.type}</span></div>
       <div class="recipe-meta">${r.ingredients.length} ingredients · ${r.servings} serving${r.servings>1?'s':''}</div>
     </div>
     <button class="fav-btn" onclick="event.stopPropagation();toggleFav(${r.id})">${r.fav?'⭐':'☆'}</button>
@@ -502,10 +604,72 @@ function renderRecipes(){
 }
 function toggleFav(id){const r=recipes.find(r=>r.id===id);if(!r)return;r.fav=!r.fav;saveAll();renderRecipes();}
 
+// meal type chips
+function renderMealTypeChips(){
+  const el=document.getElementById('rf-type-chips');
+  el.innerHTML=mealTypes.map(t=>`
+    <div class="tag-chip${t.toLowerCase()===rfSelType.toLowerCase()?' selected':''}" data-type="${t}">
+      ${t}
+      <span class="tag-chip-del" data-del-type="${t}" title="Delete">×</span>
+    </div>`).join('')+
+    `<div class="tag-chip tag-chip-add" id="rf-type-add-btn">+ New</div>`;
+  el.querySelectorAll('.tag-chip[data-type]').forEach(chip=>{
+    chip.addEventListener('click',e=>{
+      if(e.target.dataset.delType)return;
+      rfSelType=chip.dataset.type.toLowerCase();renderMealTypeChips();
+    });
+  });
+  el.querySelectorAll('[data-del-type]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const t=btn.dataset.delType;
+      if(mealTypes.length<=1){toast('Need at least one meal type','err');return;}
+      mealTypes=mealTypes.filter(x=>x!==t);
+      if(rfSelType===t.toLowerCase())rfSelType=mealTypes[0].toLowerCase();
+      saveAll();renderMealTypeChips();renderRecipeCats();
+    });
+  });
+  const addBtn=document.getElementById('rf-type-add-btn');
+  if(addBtn)addBtn.addEventListener('click',()=>{
+    const row=document.getElementById('rf-type-addrow');
+    row.style.display=row.style.display==='none'?'flex':'none';
+    if(row.style.display==='flex')document.getElementById('rf-type-input').focus();
+  });
+}
+function addCustomMealType(){
+  const val=document.getElementById('rf-type-input').value.trim();
+  if(!val)return;
+  if(!mealTypes.map(t=>t.toLowerCase()).includes(val.toLowerCase()))mealTypes.push(val);
+  rfSelType=val.toLowerCase();saveAll();
+  document.getElementById('rf-type-input').value='';
+  document.getElementById('rf-type-addrow').style.display='none';
+  renderMealTypeChips();renderRecipeCats();
+}
+
 // recipe sheet
 let ingRows=[];
-function openRecipeSheet(){recipeEditId=null;recipeSelEmoji='🍜';ingRows=[];document.getElementById('recipe-sheet-title').textContent='Add Recipe';document.getElementById('rf-name').value='';document.getElementById('rf-type').value='any';document.getElementById('rf-servings').value='2';document.getElementById('rf-notes').value='';document.getElementById('recipe-del-btn').style.display='none';renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');renderIngList();document.getElementById('recipe-overlay').classList.add('open');}
-function openRecipeEditSheet(id){const r=recipes.find(r=>r.id===id);if(!r)return;recipeEditId=id;recipeSelEmoji=r.emoji;ingRows=[...r.ingredients.map(i=>({...i}))];document.getElementById('recipe-sheet-title').textContent='Edit Recipe';document.getElementById('rf-name').value=r.name;document.getElementById('rf-type').value=r.type;document.getElementById('rf-servings').value=r.servings;document.getElementById('rf-notes').value=r.notes||'';document.getElementById('recipe-del-btn').style.display='';renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');renderIngList();document.getElementById('recipe-overlay').classList.add('open');}
+function openRecipeSheet(){
+  recipeEditId=null;recipeSelEmoji='🍜';ingRows=[];rfSelType=mealTypes[0]?.toLowerCase()||'any';
+  document.getElementById('recipe-sheet-title').textContent='Add Recipe';
+  document.getElementById('rf-name').value='';document.getElementById('rf-servings').value='2';document.getElementById('rf-notes').value='';
+  document.getElementById('recipe-del-btn').style.display='none';
+  document.getElementById('rf-type-addrow').style.display='none';
+  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');
+  renderMealTypeChips();renderIngList();
+  document.getElementById('recipe-overlay').classList.add('open');
+}
+function openRecipeEditSheet(id){
+  const r=recipes.find(r=>r.id===id);if(!r)return;
+  recipeEditId=id;recipeSelEmoji=r.emoji;ingRows=[...r.ingredients.map(i=>({...i}))];rfSelType=r.type.toLowerCase();
+  if(!mealTypes.map(t=>t.toLowerCase()).includes(rfSelType)){mealTypes.push(r.type);saveAll();}
+  document.getElementById('recipe-sheet-title').textContent='Edit Recipe';
+  document.getElementById('rf-name').value=r.name;document.getElementById('rf-servings').value=r.servings;document.getElementById('rf-notes').value=r.notes||'';
+  document.getElementById('recipe-del-btn').style.display='';
+  document.getElementById('rf-type-addrow').style.display='none';
+  renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');
+  renderMealTypeChips();renderIngList();
+  document.getElementById('recipe-overlay').classList.add('open');
+}
 function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'pcs'});renderIngList();}
 function renderIngList(){
   const el=document.getElementById('ing-list');
@@ -520,10 +684,10 @@ function renderIngList(){
 function saveRecipe(){
   const name=document.getElementById('rf-name').value.trim();if(!name){toast('Enter a recipe name','err');return;}
   const ings=ingRows.filter(i=>i.name.trim());
-  const data={emoji:recipeSelEmoji,name,type:document.getElementById('rf-type').value,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
+  const data={emoji:recipeSelEmoji,name,type:rfSelType,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
   if(recipeEditId){const r=recipes.find(r=>r.id===recipeEditId);const fav=r.fav;Object.assign(r,data);r.fav=fav;addHist('add',`Updated recipe: ${name}`);}
   else{recipes.push({id:recipeNextId++,...data});addHist('add',`Added recipe: ${name}`);}
-  saveAll();closeOverlay('recipe-overlay');renderRecipes();toast(recipeEditId?'Recipe updated':'Recipe added');
+  saveAll();closeOverlay('recipe-overlay');renderRecipes();renderRecipeCats();toast(recipeEditId?'Recipe updated':'Recipe added');
 }
 function deleteRecipe(){if(!recipeEditId)return;const r=recipes.find(r=>r.id===recipeEditId);if(!r||!confirm(`Delete ${r.name}?`))return;recipes=recipes.filter(r=>r.id!==recipeEditId);addHist('remove',`Deleted recipe: ${r.name}`);saveAll();closeOverlay('recipe-overlay');renderRecipes();toast('Deleted','warn');}
 
@@ -549,8 +713,10 @@ function renderPlanner(){
     const dk=dateKey(d);
     const isToday=d.getTime()===today.getTime();
     const plan=planner[dk]||{breakfast:[],lunch:[],dinner:[]};
-    return`<div class="day-card">
-      <div class="day-header"><span class="${isToday?'day-today':''}">${dayNames[i]} ${d.getDate()}/${d.getMonth()+1}${isToday?' · Today':''}</span></div>
+    return`<div class="day-card${isToday?' today-card':''}">
+      <div class="day-header">
+        <span class="${isToday?'day-today':''}">${dayNames[i]} ${d.getDate()}/${d.getMonth()+1}${isToday?'<span class="today-pill">TODAY</span>':''}</span>
+      </div>
       ${MEALS.map(meal=>`<div class="meal-row">
         <div class="meal-label">${MEAL_LABELS[meal]}</div>
         <div class="meal-slots">
@@ -698,7 +864,15 @@ function renderHistory(){const el=document.getElementById('history-list');if(!hi
 // ── SHARED UTILS ──────────────────────────────────────────────
 function renderEmojiGrid(gridId,emojis,varName){
   const sel=window[varName];
-  document.getElementById(gridId).innerHTML=emojis.map(e=>`<span class="emoji-opt${e===sel?' sel':''}" onclick="window['${varName}']='${e}';renderEmojiGrid('${gridId}',${JSON.stringify(emojis)},'${varName}')">${e}</span>`).join('');
+  const el=document.getElementById(gridId);
+  el.innerHTML=emojis.map((e,i)=>`<span class="emoji-opt${e===sel?' sel':''}" data-idx="${i}" data-grid="${gridId}" data-var="${varName}">${e}</span>`).join('');
+  el.querySelectorAll('.emoji-opt').forEach(span=>{
+    span.addEventListener('click',()=>{
+      const allEmojis=el.querySelectorAll('.emoji-opt');
+      window[span.dataset.var]=emojis[parseInt(span.dataset.idx)];
+      allEmojis.forEach(s=>s.classList.toggle('sel',s===span));
+    });
+  });
 }
 function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
 
