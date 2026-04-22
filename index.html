@@ -177,6 +177,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .ing-unit{width:70px!important;flex:none!important;}
 .ing-remove{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;}
 .add-ing-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:9px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:6px;}
+.ing-unit-wrap{position:relative;flex-shrink:0;}
+.ing-unit-sel{width:76px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 6px 10px 10px;font-size:13px;color:var(--text);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;}
+.ing-unit-sel:focus{border-color:var(--accent);}
+.ing-unit-custom{width:76px;background:var(--bg3);border:1px solid var(--accent);border-radius:9px;padding:10px 6px;font-size:13px;color:var(--text);outline:none;}
+/* stock-to-add confirm banner */
+.stock-add-banner{background:rgba(45,206,122,0.08);border:1px solid rgba(45,206,122,0.25);border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:13px;color:var(--green);line-height:1.6;}
 /* PICKER SHEET */
 .picker-list{display:flex;flex-direction:column;gap:0;max-height:55vh;overflow-y:auto;}
 .picker-item{display:flex;align-items:center;gap:11px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer;}
@@ -382,12 +388,45 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 
 <script>
 // ── DATA ──────────────────────────────────────────────
-const EMOJIS_STOCK=['🥚','🥛','🧀','🥩','🍗','🐟','🥦','🥕','🧅','🍅','🌽','🍋','🍎','🍌','🫙','🧈','🥫','🍞','🧂','🫒','🧄','🍚','🍜','🧃','🥤','🧊','🍫','🥐','🫐','🥣','🧆','🫚','🧋','🫖'];
-const EMOJIS_RECIPE=['🍜','🍛','🍲','🥘','🍝','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍟','🍕','🥞','🧇','🍳','🥚','🍱','🫕','🍢','🍡','🧆','🥧','🎂','🍰','🧁','🍩','🍪'];
+const EMOJIS_STOCK=[
+  // vegetables
+  '🥦','🥕','🧅','🍅','🌽','🧄','🫛','🥬','🥒','🌶️','🫑','🍆','🥑','🫚','🧆','🥔',
+  // fruits
+  '🍋','🍎','🍌','🍊','🍇','🍓','🫐','🍑','🍒','🥭','🍍','🥝','🍈','🫒',
+  // protein
+  '🥚','🥩','🍗','🐟','🦐','🦑','🥓','🫀',
+  // dairy
+  '🥛','🧀','🧈',
+  // pantry / dry goods
+  '🍚','🍞','🥐','🫙','🥫','🧂','🍯','🌾','🫘',
+  // drinks
+  '🧃','🥤','🧋','🫖','☕','🍶','🥂','🍺',
+  // frozen / misc
+  '🧊','🍫','🍪','🥣','🍜','🧇','🥞','🧁',
+];
+const EMOJIS_RECIPE=[
+  // Thai / Asian
+  '🍜','🍛','🍲','🥘','🍝','🍱','🍣','🍤','🫕','🍢','🍡','🥟','🍙','🍚','🍛',
+  // Western
+  '🥗','🥙','🌮','🌯','🍔','🍟','🍕','🥪','🫔',
+  // Breakfast
+  '🥞','🧇','🍳','🥚','🧆','🥧',
+  // Soup / stew
+  '🍲','🫕','🥣',
+  // Dessert
+  '🎂','🍰','🧁','🍩','🍪','🍫','🍮','🍭','🍬',
+  // Seafood
+  '🦞','🦀','🦐','🦑','🐙',
+  // Drinks / other
+  '🧋','☕','🍵','🥤',
+];
 
 // custom categories & meal types (persisted)
 let stockCategories=JSON.parse(localStorage.getItem('ks_cats')||'null')||['Produce','Dairy','Protein','Pantry','Frozen','Drinks','Snacks'];
 let mealTypes=JSON.parse(localStorage.getItem('ks_meal_types')||'null')||['Any','Breakfast','Lunch','Dinner','Snack'];
+let customUnits=JSON.parse(localStorage.getItem('ks_units')||'null')||[];
+const BASE_UNITS=['pcs','g','kg','ml','L','cup','tbsp','tsp','box','pack','bag','bottle','can','slice','bunch','clove','leaf'];
+function allUnits(){return[...new Set([...BASE_UNITS,...customUnits])];}
 
 // current selection state for sheets
 let sfSelCat='Produce';
@@ -425,6 +464,7 @@ function saveAll(){
   localStorage.setItem('ks_history',JSON.stringify(history.slice(0,100)));
   localStorage.setItem('ks_cats',JSON.stringify(stockCategories));
   localStorage.setItem('ks_meal_types',JSON.stringify(mealTypes));
+  localStorage.setItem('ks_units',JSON.stringify(customUnits));
 }
 function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});saveAll();}
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2200);}
@@ -670,24 +710,73 @@ function openRecipeEditSheet(id){
   renderMealTypeChips();renderIngList();
   document.getElementById('recipe-overlay').classList.add('open');
 }
-function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'pcs'});renderIngList();}
+function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'g'});renderIngList();}
+
+function unitSelectHTML(idx,selected){
+  const units=allUnits();
+  const isCustom=selected&&!units.includes(selected);
+  const opts=units.map(u=>`<option value="${u}"${u===selected?' selected':''}>${u}</option>`).join('');
+  return`<div class="ing-unit-wrap">
+    <select class="ing-unit-sel" data-ing="${idx}" onchange="handleUnitChange(this,${idx})">
+      ${opts}
+      <option value="__custom__"${isCustom?' selected':''}>+ New</option>
+    </select>
+  </div>`;
+}
+
+function handleUnitChange(sel,idx){
+  if(sel.value==='__custom__'){
+    const val=prompt('Enter new unit (e.g. ต้น, ใบ, หัว):');
+    if(val&&val.trim()){
+      const u=val.trim();
+      if(!customUnits.includes(u))customUnits.push(u);
+      ingRows[idx].unit=u;
+      saveAll();renderIngList();
+    } else {
+      // revert
+      sel.value=ingRows[idx].unit||'g';
+    }
+  } else {
+    ingRows[idx].unit=sel.value;
+  }
+}
+
 function renderIngList(){
   const el=document.getElementById('ing-list');
   if(!ingRows.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No ingredients yet</div>';return;}
   el.innerHTML=ingRows.map((ing,i)=>`<div class="ing-row">
-    <input class="form-input" value="${ing.name}" placeholder="Ingredient" oninput="ingRows[${i}].name=this.value">
+    <input class="form-input" value="${ing.name.replace(/"/g,'&quot;')}" placeholder="Ingredient" oninput="ingRows[${i}].name=this.value">
     <input class="form-input ing-amt" type="number" min="0" step="0.1" value="${ing.amount}" oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
-    <input class="form-input ing-unit" value="${ing.unit}" placeholder="unit" oninput="ingRows[${i}].unit=this.value">
+    ${unitSelectHTML(i,ing.unit)}
     <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
   </div>`).join('');
 }
+
 function saveRecipe(){
   const name=document.getElementById('rf-name').value.trim();if(!name){toast('Enter a recipe name','err');return;}
   const ings=ingRows.filter(i=>i.name.trim());
   const data={emoji:recipeSelEmoji,name,type:rfSelType,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
   if(recipeEditId){const r=recipes.find(r=>r.id===recipeEditId);const fav=r.fav;Object.assign(r,data);r.fav=fav;addHist('add',`Updated recipe: ${name}`);}
   else{recipes.push({id:recipeNextId++,...data});addHist('add',`Added recipe: ${name}`);}
-  saveAll();closeOverlay('recipe-overlay');renderRecipes();renderRecipeCats();toast(recipeEditId?'Recipe updated':'Recipe added');
+
+  // auto-add ingredients to stock if not already present
+  let newlyAdded=[];
+  ings.forEach(ing=>{
+    const nm=ing.name.trim();if(!nm)return;
+    const exists=stockItems.find(s=>s.name.toLowerCase()===nm.toLowerCase());
+    if(!exists){
+      stockItems.push({id:stockNextId++,emoji:'🫙',name:nm,category:'Pantry',qty:0,unit:ing.unit,low:1,barcode:'',nfc:''});
+      newlyAdded.push(nm);
+      addHist('add',`Auto-added to stock: ${nm}`);
+    }
+  });
+
+  saveAll();closeOverlay('recipe-overlay');renderRecipes();renderRecipeCats();renderStockAll();
+  if(newlyAdded.length){
+    toast(`Added ${newlyAdded.length} new item${newlyAdded.length>1?'s':''} to stock`,'ok');
+  } else {
+    toast(recipeEditId?'Recipe updated':'Recipe added');
+  }
 }
 function deleteRecipe(){if(!recipeEditId)return;const r=recipes.find(r=>r.id===recipeEditId);if(!r||!confirm(`Delete ${r.name}?`))return;recipes=recipes.filter(r=>r.id!==recipeEditId);addHist('remove',`Deleted recipe: ${r.name}`);saveAll();closeOverlay('recipe-overlay');renderRecipes();toast('Deleted','warn');}
 
@@ -743,7 +832,7 @@ function renderPickerList(){
     const sel=current.includes(r.id);
     return`<div class="picker-item" onclick="toggleMealItem('${dk}','${meal}',${r.id})">
       <div class="picker-emoji">${r.emoji}</div>
-      <div class="picker-name">${r.name}<br><span style="font-size:11px;color:var(--text2)">${MEAL_TYPES[r.type]} · ${r.servings} srv</span></div>
+      <div class="picker-name">${r.name}<br><span style="font-size:11px;color:var(--text2)">${r.type} · ${r.servings} srv</span></div>
       ${sel?'<div class="picker-check">✓</div>':''}
     </div>`;
   }).join('')||'<div class="empty-msg">No recipes found</div>';
