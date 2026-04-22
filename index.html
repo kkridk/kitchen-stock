@@ -6,226 +6,226 @@
 <meta name="theme-color" content="#0f1117">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kitchen Stock">
-<title>Kitchen Stock</title>
+<meta name="apple-mobile-web-app-title" content="Kitchen">
+<title>Kitchen</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  :root {
-    --bg: #0f1117;
-    --bg2: #1a1d27;
-    --bg3: #22263a;
-    --card: #1e2235;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f2ff;
-    --text2: #8b90a8;
-    --text3: #555a72;
-    --accent: #4f7cff;
-    --accent2: #3d6aee;
-    --green: #2dce7a;
-    --amber: #f5a623;
-    --red: #f5445a;
-    --blue: #4f7cff;
-    --radius: 16px;
-    --radius-sm: 10px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
-  
-  /* NAV */
-  .topbar { position: sticky; top: 0; z-index: 50; background: rgba(15,17,23,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; }
-  .topbar-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-  .topbar-sub { font-size: 11px; color: var(--text2); }
-  .add-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
-
-  /* BOTTOM NAV */
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(15,17,23,0.95); backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; }
-  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 14px; cursor: pointer; color: var(--text3); font-size: 11px; border: none; background: none; transition: color 0.15s; }
-  .nav-item.active { color: var(--accent); }
-  .nav-icon { font-size: 22px; }
-
-  /* MAIN */
-  .main { padding: 0 0 80px; }
-
-  /* STATS */
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 16px 16px 0; }
-  .stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
-  .stat-val { font-size: 20px; font-weight: 700; }
-  .stat-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
-  .stat-val.ok { color: var(--green); }
-  .stat-val.warn { color: var(--amber); }
-  .stat-val.bad { color: var(--red); }
-
-  /* SEARCH */
-  .search-wrap { padding: 14px 16px 8px; }
-  .search-box { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: var(--text); outline: none; }
-  .search-box::placeholder { color: var(--text3); }
-  .search-box:focus { border-color: var(--accent); }
-
-  /* CATEGORY PILLS */
-  .cats { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
-  .cats::-webkit-scrollbar { display: none; }
-  .cat-pill { flex-shrink: 0; padding: 5px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
-  .cat-pill.active { background: var(--accent); color: #fff; border-color: transparent; }
-
-  /* ITEM LIST */
-  .section-label { font-size: 11px; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 20px 8px; }
-  .item-list { display: flex; flex-direction: column; gap: 0; }
-  .item-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg); transition: background 0.1s; cursor: pointer; }
-  .item-row:active { background: var(--bg2); }
-  .item-row.low { border-left: 3px solid var(--amber); }
-  .item-row.empty { border-left: 3px solid var(--red); opacity: 0.6; }
-  .item-emoji { font-size: 28px; width: 40px; text-align: center; flex-shrink: 0; }
-  .item-info { flex: 1; min-width: 0; }
-  .item-name { font-size: 15px; font-weight: 600; }
-  .item-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .item-badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
-  .badge-low { background: rgba(245,166,35,0.15); color: var(--amber); }
-  .badge-empty { background: rgba(245,68,90,0.15); color: var(--red); }
-  .qty-area { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .qty-btn.minus:active { background: rgba(245,68,90,0.2); border-color: var(--red); }
-  .qty-btn.plus:active { background: rgba(79,124,255,0.2); border-color: var(--accent); }
-  .qty-display { text-align: center; min-width: 42px; }
-  .qty-num { font-size: 18px; font-weight: 700; }
-  .qty-unit { font-size: 10px; color: var(--text2); }
-
-  /* NFC / SCAN TAB */
-  .scan-tab { padding: 20px 16px; }
-  .method-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-  .method-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.15s; }
-  .method-card:active { transform: scale(0.97); }
-  .method-card.active-method { border-color: var(--accent); background: rgba(79,124,255,0.08); }
-  .method-icon { font-size: 36px; margin-bottom: 10px; }
-  .method-name { font-size: 14px; font-weight: 600; }
-  .method-desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
-
-  /* NFC ZONE */
-  .nfc-zone { background: var(--card); border: 2px dashed var(--border2); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
-  .nfc-zone.scanning { border-color: var(--accent); animation: pulse 1.5s infinite; }
-  .nfc-zone.success { border-color: var(--green); background: rgba(45,206,122,0.05); }
-  .nfc-zone.error { border-color: var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-  .nfc-big-icon { font-size: 56px; margin-bottom: 12px; }
-  .nfc-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-  .nfc-subtitle { font-size: 13px; color: var(--text2); line-height: 1.5; }
-  .nfc-result { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px; }
-  .nfc-result.ok { background: rgba(45,206,122,0.1); color: var(--green); }
-  .nfc-result.err { background: rgba(245,68,90,0.1); color: var(--red); }
-  .nfc-result.warn { background: rgba(245,166,35,0.1); color: var(--amber); }
-
-  /* BARCODE ZONE */
-  .barcode-zone { background: var(--card); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-  #camera-view { width: 100%; height: 220px; object-fit: cover; display: none; }
-  #camera-view.active { display: block; }
-  .barcode-controls { padding: 16px; }
-  .cam-btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
-  .cam-btn:active { background: var(--accent2); }
-  .manual-row { display: flex; gap: 8px; }
-  .manual-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); font-family: monospace; outline: none; }
-  .manual-input:focus { border-color: var(--accent); }
-  .go-btn { padding: 10px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; }
-
-  /* WRITE NFC TAB */
-  .write-section { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
-  .write-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-  .write-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 14px; }
-  .item-picker { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); outline: none; margin-bottom: 12px; }
-  .write-btn { width: 100%; padding: 13px; background: var(--green); color: #0f1117; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; }
-  .write-btn:active { opacity: 0.85; }
-
-  /* HISTORY */
-  .history-tab { padding: 16px; }
-  .hist-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .hist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .hist-text { flex: 1; font-size: 13px; color: var(--text); }
-  .hist-time { font-size: 11px; color: var(--text3); }
-
-  /* ADD/EDIT MODAL */
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; }
-  .overlay.open { display: flex; }
-  .sheet { background: var(--bg2); border-radius: 24px 24px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px 20px 40px; }
-  .sheet-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
-  .sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
-  .form-field { margin-bottom: 14px; }
-  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
-  .form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text); outline: none; }
-  .form-input:focus { border-color: var(--accent); }
-  .form-select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text); outline: none; }
-  .emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-  .emoji-opt { font-size: 26px; padding: 6px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-  .emoji-opt.sel { border-color: var(--accent); background: rgba(79,124,255,0.1); }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
-  .sheet-btn { flex: 1; padding: 14px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
-  .sheet-btn.cancel { background: var(--bg3); color: var(--text2); }
-  .sheet-btn.save { background: var(--accent); color: #fff; }
-  .sheet-btn.del { background: rgba(245,68,90,0.15); color: var(--red); }
-  .empty-msg { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
-
-  /* TOAST */
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px; padding: 10px 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
-  .toast.show { opacity: 1; }
-  .toast.ok { border-color: var(--green); color: var(--green); }
-  .toast.err { border-color: var(--red); color: var(--red); }
-  .toast.warn { border-color: var(--amber); color: var(--amber); }
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--card:#1e2235;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#f0f2ff;--text2:#8b90a8;--text3:#555a72;--accent:#4f7cff;--accent2:#3d6aee;--green:#2dce7a;--amber:#f5a623;--red:#f5445a;--purple:#a855f7;--r:16px;--rs:10px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden;}
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(15,17,23,0.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-size:18px;font-weight:700;}
+.topbar-sub{font-size:11px;color:var(--text2);}
+.add-btn{width:36px;height:36px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(15,17,23,0.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 12px;cursor:pointer;color:var(--text3);font-size:10px;border:none;background:none;transition:color 0.15s;}
+.nav-item.active{color:var(--accent);}
+.nav-icon{font-size:20px;}
+.main{padding:0 0 80px;}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 14px 0;}
+.stat-card{background:var(--card);border-radius:var(--rs);padding:10px 6px;text-align:center;border:1px solid var(--border);}
+.stat-val{font-size:20px;font-weight:700;}
+.stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
+.v-ok{color:var(--green);}.v-warn{color:var(--amber);}.v-bad{color:var(--red);}
+/* SEARCH + CATS */
+.search-wrap{padding:12px 14px 6px;}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-size:15px;color:var(--text);outline:none;}
+.search-box:focus{border-color:var(--accent);}
+.search-box::placeholder{color:var(--text3);}
+.cats{display:flex;gap:7px;padding:0 14px 10px;overflow-x:auto;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cat-pill{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.cat-pill.active{background:var(--accent);color:#fff;border-color:transparent;}
+/* ITEM ROW */
+.item-row{display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--bg);cursor:pointer;transition:background 0.1s;}
+.item-row:active{background:var(--bg2);}
+.item-row.low{border-left:3px solid var(--amber);}
+.item-row.empty{border-left:3px solid var(--red);opacity:0.6;}
+.item-emoji{font-size:26px;width:38px;text-align:center;flex-shrink:0;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:14px;font-weight:600;}
+.item-meta{font-size:11px;color:var(--text2);margin-top:2px;}
+.item-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:5px;vertical-align:middle;}
+.bl{background:rgba(245,166,35,0.15);color:var(--amber);}
+.be{background:rgba(245,68,90,0.15);color:var(--red);}
+.qty-area{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.qty-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-btn.minus:active{background:rgba(245,68,90,0.2);border-color:var(--red);}
+.qty-btn.plus:active{background:rgba(79,124,255,0.2);border-color:var(--accent);}
+.qty-display{text-align:center;min-width:38px;}
+.qty-num{font-size:16px;font-weight:700;}
+.qty-unit{font-size:10px;color:var(--text2);}
+/* SECTION LABEL */
+.sec-lbl{font-size:11px;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;padding:12px 18px 6px;}
+/* RECIPE TAB */
+.recipe-grid{display:flex;flex-direction:column;gap:0;}
+.recipe-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg);cursor:pointer;transition:background 0.1s;}
+.recipe-row:active{background:var(--bg2);}
+.recipe-emoji{font-size:28px;width:40px;text-align:center;flex-shrink:0;}
+.recipe-info{flex:1;min-width:0;}
+.recipe-name{font-size:14px;font-weight:600;}
+.recipe-meta{font-size:11px;color:var(--text2);margin-top:2px;}
+.fav-btn{font-size:20px;padding:4px;background:none;border:none;cursor:pointer;flex-shrink:0;}
+.type-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:8px;margin-left:6px;vertical-align:middle;}
+.tb-bf{background:rgba(245,166,35,0.15);color:var(--amber);}
+.tb-lu{background:rgba(45,206,122,0.15);color:var(--green);}
+.tb-di{background:rgba(79,124,255,0.15);color:var(--accent);}
+.tb-sn{background:rgba(168,85,247,0.15);color:var(--purple);}
+.tb-an{background:rgba(255,255,255,0.1);color:var(--text2);}
+/* PLANNER TAB */
+.planner-wrap{padding:12px 14px;}
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.week-label{font-size:14px;font-weight:600;}
+.week-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 14px;font-size:13px;cursor:pointer;}
+.day-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+.day-header{padding:10px 14px;background:var(--bg3);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.day-today{color:var(--accent);}
+.meal-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--border);}
+.meal-label{font-size:11px;color:var(--text2);width:58px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;}
+.meal-slots{display:flex;flex-wrap:wrap;gap:6px;flex:1;}
+.meal-item{display:flex;align-items:center;gap:5px;background:var(--bg3);border-radius:8px;padding:4px 8px;font-size:12px;border:1px solid var(--border);}
+.meal-item-remove{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;line-height:1;padding:0 0 0 2px;}
+.meal-add-btn{background:none;border:1px dashed var(--border2);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--text3);cursor:pointer;}
+.meal-add-btn:active{background:var(--bg3);}
+/* SHOPPING TAB */
+.shop-wrap{padding:14px;}
+.period-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.period-btn{padding:7px 14px;border-radius:20px;font-size:13px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.period-btn.active{background:var(--accent);color:#fff;border-color:transparent;}
+.shop-section{margin-bottom:18px;}
+.shop-section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding:0 2px;}
+.shop-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border-radius:var(--rs);margin-bottom:6px;border:1px solid var(--border);}
+.shop-item.have{opacity:0.45;border-color:transparent;}
+.shop-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.shop-check.checked{background:var(--green);border-color:var(--green);}
+.shop-name{flex:1;font-size:14px;}
+.shop-qty{font-size:13px;color:var(--text2);text-align:right;}
+.shop-stock{font-size:11px;color:var(--green);margin-left:4px;}
+.shop-need{font-size:11px;color:var(--amber);margin-left:4px;}
+.empty-msg{text-align:center;padding:36px 20px;color:var(--text2);font-size:14px;line-height:1.7;}
+/* NFC / SCAN */
+.scan-tab{padding:16px 14px;}
+.method-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.method-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.method-card.active-method{border-color:var(--accent);background:rgba(79,124,255,0.08);}
+.method-icon{font-size:34px;margin-bottom:8px;}
+.method-name{font-size:13px;font-weight:600;}
+.method-desc{font-size:11px;color:var(--text2);margin-top:3px;}
+.nfc-zone{background:var(--card);border:2px dashed var(--border2);border-radius:var(--r);padding:36px 18px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;}
+.nfc-zone.scanning{border-color:var(--accent);animation:pulse 1.5s infinite;}
+.nfc-zone.success{border-color:var(--green);background:rgba(45,206,122,0.05);}
+.nfc-zone.error{border-color:var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.nfc-big{font-size:50px;margin-bottom:10px;}
+.nfc-title{font-size:15px;font-weight:600;margin-bottom:5px;}
+.nfc-sub{font-size:12px;color:var(--text2);line-height:1.5;}
+.nfc-res{margin-top:12px;padding:9px 13px;border-radius:9px;font-size:13px;}
+.nfc-res.ok{background:rgba(45,206,122,0.1);color:var(--green);}
+.nfc-res.err{background:rgba(245,68,90,0.1);color:var(--red);}
+.nfc-res.warn{background:rgba(245,166,35,0.1);color:var(--amber);}
+.write-section{background:var(--card);border-radius:var(--r);padding:14px;margin-top:18px;}
+.write-title{font-size:13px;font-weight:600;margin-bottom:8px;}
+.write-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;}
+.item-picker{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:14px;color:var(--text);outline:none;margin-bottom:10px;}
+.write-btn{width:100%;padding:12px;background:var(--green);color:#0f1117;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;}
+.barcode-zone{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+#camera-view{width:100%;height:200px;object-fit:cover;display:none;}
+#camera-view.active{display:block;}
+.barcode-controls{padding:14px;}
+.cam-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:9px;}
+.manual-row{display:flex;gap:7px;}
+.manual-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:14px;color:var(--text);font-family:monospace;outline:none;}
+.manual-input:focus{border-color:var(--accent);}
+.go-btn{padding:9px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:14px;cursor:pointer;}
+/* HISTORY */
+.hist-tab{padding:14px;}
+.hist-item{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border);}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.hist-text{flex:1;font-size:13px;}
+.hist-time{font-size:11px;color:var(--text3);}
+/* SHEET (bottom sheet modal) */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;}
+.overlay.open{display:flex;}
+.sheet{background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:18px 18px 38px;}
+.sheet-handle{width:38px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;}
+.sheet-title{font-size:16px;font-weight:700;margin-bottom:18px;}
+.form-field{margin-bottom:13px;}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:0.4px;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:15px;color:var(--text);outline:none;}
+.form-input:focus{border-color:var(--accent);}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:15px;color:var(--text);outline:none;}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.emoji-opt{font-size:24px;padding:5px;border-radius:7px;cursor:pointer;border:2px solid transparent;}
+.emoji-opt.sel{border-color:var(--accent);background:rgba(79,124,255,0.1);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sheet-actions{display:flex;gap:9px;margin-top:18px;}
+.sheet-btn{flex:1;padding:13px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;border:none;}
+.sheet-btn.cancel{background:var(--bg3);color:var(--text2);}
+.sheet-btn.save{background:var(--accent);color:#fff;}
+.sheet-btn.del{background:rgba(245,68,90,0.15);color:var(--red);}
+/* INGREDIENTS */
+.ing-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
+.ing-row{display:flex;gap:7px;align-items:center;}
+.ing-row .form-input{flex:1;}
+.ing-amt{width:70px!important;flex:none!important;}
+.ing-unit{width:70px!important;flex:none!important;}
+.ing-remove{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;}
+.add-ing-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:9px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:6px;}
+/* PICKER SHEET */
+.picker-list{display:flex;flex-direction:column;gap:0;max-height:55vh;overflow-y:auto;}
+.picker-item{display:flex;align-items:center;gap:11px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer;}
+.picker-item:active{background:var(--bg3);}
+.picker-emoji{font-size:24px;width:34px;text-align:center;}
+.picker-name{flex:1;font-size:14px;}
+.picker-check{font-size:16px;color:var(--accent);}
+/* TOAST */
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:9px 18px;font-size:13px;z-index:300;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+.toast.warn{border-color:var(--amber);color:var(--amber);}
 </style>
 </head>
 <body>
-
 <div class="topbar">
-  <div>
-    <div class="topbar-title">🧊 Kitchen Stock</div>
-    <div class="topbar-sub" id="topbar-sub">Loading...</div>
-  </div>
-  <button class="add-btn" onclick="openAddSheet()">+</button>
+  <div><div class="topbar-title" id="topbar-title">🧊 Kitchen Stock</div><div class="topbar-sub" id="topbar-sub">Loading...</div></div>
+  <button class="add-btn" id="add-btn" onclick="handleAdd()">+</button>
 </div>
 
-<div class="main" id="main-content">
-  <!-- Inventory Tab -->
-  <div id="tab-inventory">
+<div class="main">
+  <!-- STOCK TAB -->
+  <div id="tab-stock">
     <div class="stats-row" id="stats-row"></div>
-    <div class="search-wrap"><input class="search-box" type="search" id="search-input" placeholder="🔍  Search items..." oninput="renderInventory()"></div>
+    <div class="search-wrap"><input class="search-box" id="search-input" type="search" placeholder="🔍  Search items..." oninput="renderStock()"></div>
     <div class="cats" id="cats-row"></div>
-    <div id="inventory-list"></div>
+    <div id="stock-list"></div>
   </div>
 
-  <!-- Scan/NFC Tab -->
+  <!-- SCAN TAB -->
   <div id="tab-scan" style="display:none">
     <div class="scan-tab">
       <div class="method-cards">
-        <div class="method-card active-method" id="method-nfc" onclick="setMethod('nfc')">
-          <div class="method-icon">📡</div>
-          <div class="method-name">NFC Tap</div>
-          <div class="method-desc">Tap tag on container</div>
-        </div>
-        <div class="method-card" id="method-barcode" onclick="setMethod('barcode')">
-          <div class="method-icon">📷</div>
-          <div class="method-name">Barcode</div>
-          <div class="method-desc">Scan or type code</div>
-        </div>
+        <div class="method-card active-method" id="method-nfc" onclick="setMethod('nfc')"><div class="method-icon">📡</div><div class="method-name">NFC Tap</div><div class="method-desc">Tap tag on container</div></div>
+        <div class="method-card" id="method-barcode" onclick="setMethod('barcode')"><div class="method-icon">📷</div><div class="method-name">Barcode</div><div class="method-desc">Scan or type code</div></div>
       </div>
-
-      <!-- NFC panel -->
       <div id="panel-nfc">
         <div class="nfc-zone" id="nfc-zone" onclick="startNFCScan()">
-          <div class="nfc-big-icon" id="nfc-icon">📡</div>
+          <div class="nfc-big" id="nfc-icon">📡</div>
           <div class="nfc-title" id="nfc-title">Tap to start NFC scan</div>
-          <div class="nfc-subtitle" id="nfc-sub">Press the button, then hold your phone to the NFC tag on your container</div>
-          <div class="nfc-result" id="nfc-result" style="display:none"></div>
+          <div class="nfc-sub" id="nfc-sub">Press then hold phone to the NFC tag on your container</div>
+          <div class="nfc-res" id="nfc-result" style="display:none"></div>
         </div>
-
-        <div class="write-section" style="margin-top:20px">
+        <div class="write-section">
           <div class="write-title">⚙️ Write NFC tag to item</div>
-          <div class="write-desc">Do this once per container. Pick an item, then tap Write and hold your phone to a blank NFC tag. After that, tapping that tag will auto-deduct stock.</div>
+          <div class="write-desc">Do this once per container. Pick an item, tap Write, then hold phone to a blank NFC tag.</div>
           <select class="item-picker" id="nfc-write-picker"></select>
           <button class="write-btn" onclick="writeNFCTag()">📡 Write NFC Tag</button>
-          <div class="nfc-result" id="write-result" style="display:none; margin-top:10px;"></div>
+          <div class="nfc-res" id="write-result" style="display:none;margin-top:10px;"></div>
         </div>
       </div>
-
-      <!-- Barcode panel -->
       <div id="panel-barcode" style="display:none">
         <div class="barcode-zone">
           <video id="camera-view" autoplay playsinline muted></video>
@@ -237,77 +237,138 @@
             </div>
           </div>
         </div>
-        <div class="nfc-result" id="barcode-result" style="display:none; margin-top:0; border-radius:0 0 16px 16px;"></div>
-
-        <div class="write-section" style="margin-top:16px">
+        <div class="nfc-res" id="barcode-result" style="display:none;margin:0;border-radius:0 0 16px 16px;"></div>
+        <div class="write-section" style="margin-top:14px">
           <div class="write-title">🔗 Assign barcode to item</div>
-          <div class="write-desc">Scan the barcode on a package, then link it to an item in your inventory. Next time you scan it, it auto-deducts.</div>
+          <div class="write-desc">Link a scanned barcode to an item once — next scan auto-deducts.</div>
           <select class="item-picker" id="barcode-assign-picker"></select>
-          <div class="manual-row" style="margin-bottom:10px">
-            <input class="manual-input" id="barcode-assign-val" type="text" placeholder="Barcode number...">
-            <button class="go-btn" onclick="assignBarcode()">Link</button>
-          </div>
+          <div class="manual-row"><input class="manual-input" id="barcode-assign-val" type="text" placeholder="Barcode number..."><button class="go-btn" onclick="assignBarcode()">Link</button></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- History Tab -->
+  <!-- RECIPES TAB -->
+  <div id="tab-recipes" style="display:none">
+    <div class="search-wrap"><input class="search-box" id="recipe-search" type="search" placeholder="🔍  Search recipes..." oninput="renderRecipes()"></div>
+    <div class="cats" id="recipe-cats"></div>
+    <div id="recipe-list"></div>
+  </div>
+
+  <!-- PLANNER TAB -->
+  <div id="tab-planner" style="display:none">
+    <div class="planner-wrap">
+      <div class="week-nav">
+        <button class="week-btn" onclick="shiftWeek(-1)">← Prev</button>
+        <div class="week-label" id="week-label"></div>
+        <button class="week-btn" onclick="shiftWeek(1)">Next →</button>
+      </div>
+      <div id="planner-days"></div>
+    </div>
+  </div>
+
+  <!-- SHOPPING TAB -->
+  <div id="tab-shopping" style="display:none">
+    <div class="shop-wrap">
+      <div class="sec-lbl" style="padding:0 2px 10px">Select period to plan for</div>
+      <div class="period-row" id="period-row">
+        <button class="period-btn active" onclick="setPeriod(1)">Today</button>
+        <button class="period-btn" onclick="setPeriod(2)">2 days</button>
+        <button class="period-btn" onclick="setPeriod(3)">3 days</button>
+        <button class="period-btn" onclick="setPeriod(5)">5 days</button>
+        <button class="period-btn" onclick="setPeriod(7)">1 week</button>
+      </div>
+      <div id="shop-content"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
   <div id="tab-history" style="display:none">
-    <div class="history-tab">
-      <div class="section-label">Recent activity</div>
-      <div id="history-list"></div>
+    <div class="hist-tab"><div class="sec-lbl" style="padding:0 0 10px">Recent activity</div><div id="history-list"></div></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-stock" onclick="switchTab('stock')"><span class="nav-icon">🧊</span>Stock</button>
+  <button class="nav-item" id="nav-scan" onclick="switchTab('scan')"><span class="nav-icon">📡</span>Scan</button>
+  <button class="nav-item" id="nav-recipes" onclick="switchTab('recipes')"><span class="nav-icon">🍽️</span>Recipes</button>
+  <button class="nav-item" id="nav-planner" onclick="switchTab('planner')"><span class="nav-icon">📅</span>Planner</button>
+  <button class="nav-item" id="nav-shopping" onclick="switchTab('shopping')"><span class="nav-icon">🛒</span>Shopping</button>
+  <button class="nav-item" id="nav-history" onclick="switchTab('history')"><span class="nav-icon">📋</span>Log</button>
+</nav>
+
+<!-- STOCK SHEET -->
+<div class="overlay" id="stock-overlay" onclick="closeOverlay('stock-overlay',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="stock-sheet-title">Add Item</div>
+    <div class="form-field"><label class="form-label">Emoji</label><div class="emoji-grid" id="stock-emoji-grid"></div></div>
+    <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="sf-name" type="text" placeholder="e.g. Eggs"></div>
+    <div class="form-field"><label class="form-label">Category</label>
+      <select class="form-select" id="sf-cat"><option>Produce</option><option>Dairy</option><option>Protein</option><option>Pantry</option><option>Frozen</option><option>Drinks</option><option>Snacks</option></select>
+    </div>
+    <div class="two-col">
+      <div class="form-field"><label class="form-label">Quantity</label><input class="form-input" id="sf-qty" type="number" min="0" value="1"></div>
+      <div class="form-field"><label class="form-label">Unit</label><input class="form-input" id="sf-unit" type="text" value="pcs"></div>
+    </div>
+    <div class="form-field"><label class="form-label">Low stock alert at</label><input class="form-input" id="sf-low" type="number" min="0" value="2"></div>
+    <div class="form-field"><label class="form-label">Barcode (optional)</label><input class="form-input" id="sf-barcode" type="text" placeholder="Scan or type"></div>
+    <div class="sheet-actions">
+      <button class="sheet-btn cancel" onclick="closeOverlay('stock-overlay')">Cancel</button>
+      <button class="sheet-btn del" id="stock-del-btn" onclick="deleteStockItem()" style="display:none">Delete</button>
+      <button class="sheet-btn save" onclick="saveStockItem()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Bottom Nav -->
-<nav class="bottom-nav">
-  <button class="nav-item active" id="nav-inventory" onclick="switchTab('inventory')">
-    <span class="nav-icon">🧊</span>Stock
-  </button>
-  <button class="nav-item" id="nav-scan" onclick="switchTab('scan')">
-    <span class="nav-icon">📡</span>Scan / NFC
-  </button>
-  <button class="nav-item" id="nav-history" onclick="switchTab('history')">
-    <span class="nav-icon">📋</span>History
-  </button>
-</nav>
-
-<!-- Add/Edit Sheet -->
-<div class="overlay" id="sheet-overlay" onclick="closeSheet(event)">
-  <div class="sheet" id="item-sheet">
+<!-- RECIPE SHEET -->
+<div class="overlay" id="recipe-overlay" onclick="closeOverlay('recipe-overlay',event)">
+  <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheet-title">Add Item</div>
+    <div class="sheet-title" id="recipe-sheet-title">Add Recipe</div>
+    <div class="form-field"><label class="form-label">Emoji</label><div class="emoji-grid" id="recipe-emoji-grid"></div></div>
+    <div class="form-field"><label class="form-label">Recipe Name</label><input class="form-input" id="rf-name" type="text" placeholder="e.g. Pad Thai"></div>
+    <div class="form-field"><label class="form-label">Meal type</label>
+      <select class="form-select" id="rf-type"><option value="any">Any</option><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snack">Snack</option></select>
+    </div>
+    <div class="form-field"><label class="form-label">Servings</label><input class="form-input" id="rf-servings" type="number" min="1" value="2"></div>
     <div class="form-field">
-      <label class="form-label">Emoji</label>
-      <div class="emoji-grid" id="emoji-grid"></div>
+      <label class="form-label">Ingredients</label>
+      <div class="ing-list" id="ing-list"></div>
+      <button class="add-ing-btn" onclick="addIngredientRow()">+ Add ingredient</button>
     </div>
-    <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="f-name" type="text" placeholder="e.g. Eggs"></div>
-    <div class="form-field"><label class="form-label">Category</label>
-      <select class="form-select" id="f-cat">
-        <option>Produce</option><option>Dairy</option><option>Protein</option><option>Pantry</option><option>Frozen</option><option>Drinks</option><option>Snacks</option>
-      </select>
-    </div>
-    <div class="two-col">
-      <div class="form-field"><label class="form-label">Quantity</label><input class="form-input" id="f-qty" type="number" min="0" value="1"></div>
-      <div class="form-field"><label class="form-label">Unit</label><input class="form-input" id="f-unit" type="text" value="pcs"></div>
-    </div>
-    <div class="form-field"><label class="form-label">Low stock alert at</label><input class="form-input" id="f-low" type="number" min="0" value="2"></div>
-    <div class="form-field"><label class="form-label">Barcode (optional)</label><input class="form-input" id="f-barcode" type="text" placeholder="Scan or type"></div>
+    <div class="form-field"><label class="form-label">Notes (optional)</label><input class="form-input" id="rf-notes" type="text" placeholder="e.g. Add chili for spicy version"></div>
     <div class="sheet-actions">
-      <button class="sheet-btn cancel" onclick="closeSheet()">Cancel</button>
-      <button class="sheet-btn del" id="del-btn" onclick="deleteItem()" style="display:none">Delete</button>
-      <button class="sheet-btn save" onclick="saveItem()">Save</button>
+      <button class="sheet-btn cancel" onclick="closeOverlay('recipe-overlay')">Cancel</button>
+      <button class="sheet-btn del" id="recipe-del-btn" onclick="deleteRecipe()" style="display:none">Delete</button>
+      <button class="sheet-btn save" onclick="saveRecipe()">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- MEAL PICKER SHEET -->
+<div class="overlay" id="picker-overlay" onclick="closeOverlay('picker-overlay',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="picker-title">Choose recipe</div>
+    <div class="search-wrap" style="padding:0 0 12px"><input class="search-box" id="picker-search" type="search" placeholder="Search..." oninput="renderPickerList()"></div>
+    <div class="picker-list" id="picker-list"></div>
+    <div class="sheet-actions"><button class="sheet-btn cancel" onclick="closeOverlay('picker-overlay')">Cancel</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const EMOJIS=['🥚','🥛','🧀','🥩','🍗','🐟','🥦','🥕','🧅','🍅','🌽','🍋','🍎','🍌','🫙','🧈','🥫','🍞','🧂','🫒','🧄','🍚','🍜','🧃','🥤','🧊','🍫','🥐','🫐','🥣','🧆','🥗','🫚','🧋','🍶','🫖'];
-let items=JSON.parse(localStorage.getItem('ks_items')||'null')||[
+// ── DATA ──────────────────────────────────────────────
+const EMOJIS_STOCK=['🥚','🥛','🧀','🥩','🍗','🐟','🥦','🥕','🧅','🍅','🌽','🍋','🍎','🍌','🫙','🧈','🥫','🍞','🧂','🫒','🧄','🍚','🍜','🧃','🥤','🧊','🍫','🥐','🫐','🥣','🧆','🫚','🧋','🫖'];
+const EMOJIS_RECIPE=['🍜','🍛','🍲','🥘','🍝','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍟','🍕','🥞','🧇','🍳','🥚','🍱','🫕','🍢','🍡','🧆','🥧','🎂','🍰','🧁','🍩','🍪'];
+const MEAL_TYPES={any:'Any',breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack'};
+const MEAL_TYPE_CLASS={any:'tb-an',breakfast:'tb-bf',lunch:'tb-lu',dinner:'tb-di',snack:'tb-sn'};
+const MEALS=['breakfast','lunch','dinner'];
+const MEAL_LABELS={breakfast:'Morning',lunch:'Lunch',dinner:'Dinner'};
+
+let stockItems=JSON.parse(localStorage.getItem('ks_items')||'null')||[
   {id:1,emoji:'🥚',name:'Eggs',category:'Protein',qty:6,unit:'pcs',low:3,barcode:'',nfc:''},
   {id:2,emoji:'🥛',name:'Milk',category:'Dairy',qty:2,unit:'L',low:1,barcode:'',nfc:''},
   {id:3,emoji:'🥦',name:'Broccoli',category:'Produce',qty:1,unit:'pcs',low:1,barcode:'',nfc:''},
@@ -316,45 +377,78 @@ let items=JSON.parse(localStorage.getItem('ks_items')||'null')||[
   {id:6,emoji:'🧄',name:'Garlic',category:'Produce',qty:5,unit:'pcs',low:2,barcode:'',nfc:''},
   {id:7,emoji:'🥩',name:'Chicken',category:'Protein',qty:2,unit:'pcs',low:1,barcode:'',nfc:''},
 ];
+let recipes=JSON.parse(localStorage.getItem('ks_recipes')||'null')||[
+  {id:1,emoji:'🍜',name:'Pad Thai',type:'lunch',servings:2,fav:true,notes:'',ingredients:[{name:'Rice Noodles',amount:200,unit:'g'},{name:'Eggs',amount:2,unit:'pcs'},{name:'Bean Sprouts',amount:100,unit:'g'},{name:'Garlic',amount:3,unit:'pcs'}]},
+  {id:2,emoji:'🍳',name:'Scrambled Eggs',type:'breakfast',servings:1,fav:true,notes:'',ingredients:[{name:'Eggs',amount:3,unit:'pcs'},{name:'Milk',amount:30,unit:'ml'},{name:'Cheese',amount:2,unit:'slices'}]},
+  {id:3,emoji:'🍛',name:'Green Curry',type:'dinner',servings:3,fav:false,notes:'Add coconut milk',ingredients:[{name:'Chicken',amount:300,unit:'g'},{name:'Rice',amount:300,unit:'g'},{name:'Garlic',amount:2,unit:'pcs'}]},
+];
+// planner: {dateKey: {breakfast:[recipeId,...], lunch:[...], dinner:[...]}}
+let planner=JSON.parse(localStorage.getItem('ks_planner')||'{}');
+let shopChecked=JSON.parse(localStorage.getItem('ks_shop_checked')||'{}');
 let history=JSON.parse(localStorage.getItem('ks_history')||'[]');
-let nextId=Math.max(0,...items.map(i=>i.id))+1;
-let activeTab='inventory';
-let activeCat='All';
-let editId=null;
-let selEmoji='🥚';
-let scanMethod='nfc';
-let cameraStream=null;
-let barcodeDetector=null;
-let scanLoop=null;
+let stockNextId=Math.max(0,...stockItems.map(i=>i.id))+1;
+let recipeNextId=Math.max(0,...recipes.map(r=>r.id))+1;
 
-function save(){localStorage.setItem('ks_items',JSON.stringify(items));localStorage.setItem('ks_history',JSON.stringify(history.slice(0,100)));}
-function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});save();}
-function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2000);}
+function saveAll(){
+  localStorage.setItem('ks_items',JSON.stringify(stockItems));
+  localStorage.setItem('ks_recipes',JSON.stringify(recipes));
+  localStorage.setItem('ks_planner',JSON.stringify(planner));
+  localStorage.setItem('ks_shop_checked',JSON.stringify(shopChecked));
+  localStorage.setItem('ks_history',JSON.stringify(history.slice(0,100)));
+}
+function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});saveAll();}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2200);}
 
+// ── TABS ──────────────────────────────────────────────
+let activeTab='stock';
+const TABS=['stock','scan','recipes','planner','shopping','history'];
 function switchTab(t){
   activeTab=t;
-  ['inventory','scan','history'].forEach(tab=>{
+  TABS.forEach(tab=>{
     document.getElementById('tab-'+tab).style.display=tab===t?'':'none';
     document.getElementById('nav-'+tab).classList.toggle('active',tab===t);
   });
-  if(t==='scan'){populatePickers();}
+  const titles={stock:'🧊 Kitchen Stock',scan:'📡 Scan / NFC',recipes:'🍽️ Recipes',planner:'📅 Meal Planner',shopping:'🛒 Shopping List',history:'📋 Activity Log'};
+  const subs={stock:'',scan:'Tap or scan to deduct stock',recipes:'Your saved recipes',planner:'Plan your week',shopping:'What to buy',history:''};
+  document.getElementById('topbar-title').textContent=titles[t];
+  document.getElementById('add-btn').style.display=['stock','recipes'].includes(t)?'flex':'none';
+  if(t==='stock'){document.getElementById('topbar-sub').textContent='';renderStockStats();}
+  if(t==='scan'){populateScanPickers();}
+  if(t==='recipes'){renderRecipes();}
+  if(t==='planner'){renderPlanner();}
+  if(t==='shopping'){renderShopping();}
   if(t==='history'){renderHistory();}
-  if(t!=='scan'&&cameraStream){stopCamera();}
+  if(t!=='scan'&&cameraStream)stopCamera();
 }
+function handleAdd(){if(activeTab==='stock')openStockSheet();else if(activeTab==='recipes')openRecipeSheet();}
 
-// INVENTORY
-function renderInventory(){
-  const q=document.getElementById('search-input').value.toLowerCase();
-  let filtered=items.filter(i=>i.name.toLowerCase().includes(q)&&(activeCat==='All'||i.category===activeCat));
-  filtered.sort((a,b)=>a.qty-b.qty);
-  const el=document.getElementById('inventory-list');
-  if(!filtered.length){el.innerHTML='<div class="empty-msg">No items found</div>';return;}
-  el.innerHTML=filtered.map(item=>{
+// ── STOCK ──────────────────────────────────────────────
+let stockActiveCat='All';
+let stockEditId=null;
+let stockSelEmoji='🥚';
+
+function renderStockStats(){
+  const total=stockItems.length,empty=stockItems.filter(i=>i.qty===0).length,low=stockItems.filter(i=>i.qty>0&&i.qty<=i.low).length,ok=total-empty-low;
+  document.getElementById('stats-row').innerHTML=`<div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">Items</div></div><div class="stat-card"><div class="stat-val v-ok">${ok}</div><div class="stat-lbl">Stocked</div></div><div class="stat-card"><div class="stat-val v-warn">${low}</div><div class="stat-lbl">Low</div></div><div class="stat-card"><div class="stat-val v-bad">${empty}</div><div class="stat-lbl">Empty</div></div>`;
+  document.getElementById('topbar-sub').textContent=`${ok} stocked · ${low} low · ${empty} empty`;
+}
+function renderStockCats(){
+  const cats=['All',...new Set(stockItems.map(i=>i.category))];
+  document.getElementById('cats-row').innerHTML=cats.map(c=>`<button class="cat-pill${c===stockActiveCat?' active':''}" onclick="stockSetCat('${c}')">${c}</button>`).join('');
+}
+function stockSetCat(c){stockActiveCat=c;renderStockCats();renderStock();}
+function renderStock(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  let f=stockItems.filter(i=>i.name.toLowerCase().includes(q)&&(stockActiveCat==='All'||i.category===stockActiveCat));
+  f.sort((a,b)=>a.qty-b.qty);
+  const el=document.getElementById('stock-list');
+  if(!f.length){el.innerHTML='<div class="empty-msg">No items found</div>';return;}
+  el.innerHTML=f.map(item=>{
     const s=item.qty===0?'empty':item.qty<=item.low?'low':'';
-    const badge=item.qty===0?'<span class="item-badge badge-empty">Out</span>':item.qty<=item.low?'<span class="item-badge badge-low">Low</span>':'';
-    return`<div class="item-row ${s}" onclick="openEditSheet(${item.id})">
+    const badge=item.qty===0?'<span class="item-badge be">Out</span>':item.qty<=item.low?'<span class="item-badge bl">Low</span>':'';
+    return`<div class="item-row ${s}" onclick="openStockEditSheet(${item.id})">
       <div class="item-emoji">${item.emoji}</div>
-      <div class="item-info"><div class="item-name">${item.name}${badge}</div><div class="item-meta">${item.category}${item.nfc?' · 📡 NFC':''}${item.barcode?' · 🔢 Barcode':''}</div></div>
+      <div class="item-info"><div class="item-name">${item.name}${badge}</div><div class="item-meta">${item.category}${item.nfc?' · 📡':''}</div></div>
       <div class="qty-area">
         <button class="qty-btn minus" onclick="event.stopPropagation();changeQty(${item.id},-1)">−</button>
         <div class="qty-display"><div class="qty-num">${item.qty}</div><div class="qty-unit">${item.unit}</div></div>
@@ -363,182 +457,253 @@ function renderInventory(){
     </div>`;
   }).join('');
 }
-
-function renderStats(){
-  const total=items.length,empty=items.filter(i=>i.qty===0).length,low=items.filter(i=>i.qty>0&&i.qty<=i.low).length,ok=total-empty-low;
-  document.getElementById('stats-row').innerHTML=`
-    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">Items</div></div>
-    <div class="stat-card"><div class="stat-val ok">${ok}</div><div class="stat-lbl">Stocked</div></div>
-    <div class="stat-card"><div class="stat-val warn">${low}</div><div class="stat-lbl">Low</div></div>
-    <div class="stat-card"><div class="stat-val bad">${empty}</div><div class="stat-lbl">Empty</div></div>`;
-  document.getElementById('topbar-sub').textContent=`${ok} ok · ${low} low · ${empty} empty`;
-}
-
-function renderCats(){
-  const cats=['All',...new Set(items.map(i=>i.category))];
-  document.getElementById('cats-row').innerHTML=cats.map(c=>`<button class="cat-pill${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
-}
-
-function setCat(c){activeCat=c;renderCats();renderInventory();}
-
 function changeQty(id,d){
-  const item=items.find(i=>i.id===id);if(!item)return;
+  const item=stockItems.find(i=>i.id===id);if(!item)return;
   const prev=item.qty;item.qty=Math.max(0,item.qty+d);
-  if(item.qty!==prev){addHist(d>0?'add':'remove',d>0?`+1 ${item.unit} of ${item.name}`:`Used 1 ${item.unit} of ${item.name} → ${item.qty} left`);save();renderInventory();renderStats();}
-  if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
-  else if(item.qty<=item.low&&d<0)toast(`${item.name} is running low`,'warn');
+  if(item.qty!==prev){addHist(d>0?'add':'remove',d>0?`+1 ${item.unit} of ${item.name}`:`Used 1 ${item.unit} of ${item.name} → ${item.qty} left`);saveAll();renderStock();renderStockStats();}
+  if(item.qty===0)toast(`${item.name} out of stock`,'warn');
+  else if(item.qty<=item.low&&d<0)toast(`${item.name} running low`,'warn');
 }
 
-// NFC
-function setMethod(m){
-  scanMethod=m;
-  document.getElementById('method-nfc').classList.toggle('active-method',m==='nfc');
-  document.getElementById('method-barcode').classList.toggle('active-method',m==='barcode');
-  document.getElementById('panel-nfc').style.display=m==='nfc'?'':'none';
-  document.getElementById('panel-barcode').style.display=m==='barcode'?'':'none';
-  if(m!=='barcode'&&cameraStream)stopCamera();
-}
+// stock sheet
+function openStockSheet(){stockEditId=null;stockSelEmoji='🥚';document.getElementById('stock-sheet-title').textContent='Add Item';document.getElementById('sf-name').value='';document.getElementById('sf-qty').value='1';document.getElementById('sf-unit').value='pcs';document.getElementById('sf-low').value='2';document.getElementById('sf-barcode').value='';document.getElementById('sf-cat').value='Produce';document.getElementById('stock-del-btn').style.display='none';renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');document.getElementById('stock-overlay').classList.add('open');}
+function openStockEditSheet(id){const item=stockItems.find(i=>i.id===id);if(!item)return;stockEditId=id;stockSelEmoji=item.emoji;document.getElementById('stock-sheet-title').textContent='Edit Item';document.getElementById('sf-name').value=item.name;document.getElementById('sf-qty').value=item.qty;document.getElementById('sf-unit').value=item.unit;document.getElementById('sf-low').value=item.low;document.getElementById('sf-barcode').value=item.barcode||'';document.getElementById('sf-cat').value=item.category;document.getElementById('stock-del-btn').style.display='';renderEmojiGrid('stock-emoji-grid',EMOJIS_STOCK,'stockSelEmoji');document.getElementById('stock-overlay').classList.add('open');}
+function saveStockItem(){const name=document.getElementById('sf-name').value.trim();if(!name){toast('Enter a name','err');return;}const data={emoji:stockSelEmoji,name,category:document.getElementById('sf-cat').value,qty:parseInt(document.getElementById('sf-qty').value)||0,unit:document.getElementById('sf-unit').value||'pcs',low:parseInt(document.getElementById('sf-low').value)||2,barcode:document.getElementById('sf-barcode').value.trim()};if(stockEditId){const item=stockItems.find(i=>i.id===stockEditId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}else{stockItems.push({id:stockNextId++,...data,nfc:''});addHist('add',`Added ${name}`);}saveAll();closeOverlay('stock-overlay');renderStockAll();toast(stockEditId?'Updated':'Item added');}
+function deleteStockItem(){if(!stockEditId)return;const item=stockItems.find(i=>i.id===stockEditId);if(!item||!confirm(`Delete ${item.name}?`))return;stockItems=stockItems.filter(i=>i.id!==stockEditId);addHist('remove',`Deleted ${item.name}`);saveAll();closeOverlay('stock-overlay');renderStockAll();toast('Deleted','warn');}
+function renderStockAll(){renderStockStats();renderStockCats();renderStock();}
 
-function startNFCScan(){
-  if(!('NDEFReader' in window)){showNFCResult('nfc-result','err','NFC not supported on this browser. Use Chrome on Android.');return;}
-  const zone=document.getElementById('nfc-zone');
-  zone.classList.add('scanning');
-  document.getElementById('nfc-icon').textContent='📡';
-  document.getElementById('nfc-title').textContent='Scanning... hold to tag';
-  document.getElementById('nfc-sub').textContent='Keep your phone close to the NFC tag';
-  document.getElementById('nfc-result').style.display='none';
-  const reader=new NDEFReader();
-  reader.scan().then(()=>{
-    reader.addEventListener('reading',({message,serialNumber})=>{
-      zone.classList.remove('scanning');
-      const tagId=serialNumber||'unknown';
-      const item=items.find(i=>i.nfc&&i.nfc===tagId);
-      if(item){
-        if(item.qty>0){
-          item.qty--;
-          addHist('nfc',`NFC: used 1 ${item.unit} of ${item.name} → ${item.qty} left`);
-          save();renderInventory();renderStats();
-          zone.classList.add('success');
-          document.getElementById('nfc-icon').textContent='✅';
-          document.getElementById('nfc-title').textContent=item.name;
-          showNFCResult('nfc-result','ok',`Deducted 1 ${item.unit} — ${item.qty} ${item.unit} remaining`);
-          if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
-          else if(item.qty<=item.low)toast(`${item.name} is running low`,'warn');
-        } else {
-          zone.classList.add('error');
-          document.getElementById('nfc-icon').textContent='⚠️';
-          showNFCResult('nfc-result','warn',`${item.name} is already out of stock`);
-        }
-      } else {
-        zone.classList.add('error');
-        document.getElementById('nfc-icon').textContent='❓';
-        showNFCResult('nfc-result','err',`Unknown tag (${tagId}). Go to "Write NFC Tag" to link it to an item first.`);
-      }
-      setTimeout(()=>{zone.className='nfc-zone';document.getElementById('nfc-icon').textContent='📡';document.getElementById('nfc-title').textContent='Tap to start NFC scan';document.getElementById('nfc-sub').textContent='Press the button, then hold your phone to the NFC tag on your container';},3000);
-    });
-  }).catch(e=>{
-    zone.classList.remove('scanning');
-    showNFCResult('nfc-result','err','Could not start NFC: '+e.message+'. Make sure NFC is enabled in Android settings.');
+// ── RECIPES ──────────────────────────────────────────────
+let recipeActiveCat='All';
+let recipeEditId=null;
+let recipeSelEmoji='🍜';
+
+const RECIPE_CATS=['All','Any','Breakfast','Lunch','Dinner','Snack','Favourites'];
+function renderRecipeCats(){
+  document.getElementById('recipe-cats').innerHTML=RECIPE_CATS.map(c=>`<button class="cat-pill${c===recipeActiveCat?' active':''}" onclick="recipeSetCat('${c}')">${c}</button>`).join('');
+}
+function recipeSetCat(c){recipeActiveCat=c;renderRecipes();}
+function renderRecipes(){
+  const q=(document.getElementById('recipe-search').value||'').toLowerCase();
+  let f=recipes.filter(r=>{
+    const matchQ=r.name.toLowerCase().includes(q);
+    const matchCat=recipeActiveCat==='All'||(recipeActiveCat==='Favourites'&&r.fav)||(recipeActiveCat.toLowerCase()===r.type);
+    return matchQ&&matchCat;
   });
+  const el=document.getElementById('recipe-list');
+  if(!f.length){el.innerHTML='<div class="empty-msg">No recipes yet.<br>Tap + to add your first recipe.</div>';return;}
+  el.innerHTML=f.map(r=>`<div class="recipe-row" onclick="openRecipeEditSheet(${r.id})">
+    <div class="recipe-emoji">${r.emoji}</div>
+    <div class="recipe-info">
+      <div class="recipe-name">${r.name}<span class="type-badge ${MEAL_TYPE_CLASS[r.type]||'tb-an'}">${MEAL_TYPES[r.type]||r.type}</span></div>
+      <div class="recipe-meta">${r.ingredients.length} ingredients · ${r.servings} serving${r.servings>1?'s':''}</div>
+    </div>
+    <button class="fav-btn" onclick="event.stopPropagation();toggleFav(${r.id})">${r.fav?'⭐':'☆'}</button>
+  </div>`).join('');
+}
+function toggleFav(id){const r=recipes.find(r=>r.id===id);if(!r)return;r.fav=!r.fav;saveAll();renderRecipes();}
+
+// recipe sheet
+let ingRows=[];
+function openRecipeSheet(){recipeEditId=null;recipeSelEmoji='🍜';ingRows=[];document.getElementById('recipe-sheet-title').textContent='Add Recipe';document.getElementById('rf-name').value='';document.getElementById('rf-type').value='any';document.getElementById('rf-servings').value='2';document.getElementById('rf-notes').value='';document.getElementById('recipe-del-btn').style.display='none';renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');renderIngList();document.getElementById('recipe-overlay').classList.add('open');}
+function openRecipeEditSheet(id){const r=recipes.find(r=>r.id===id);if(!r)return;recipeEditId=id;recipeSelEmoji=r.emoji;ingRows=[...r.ingredients.map(i=>({...i}))];document.getElementById('recipe-sheet-title').textContent='Edit Recipe';document.getElementById('rf-name').value=r.name;document.getElementById('rf-type').value=r.type;document.getElementById('rf-servings').value=r.servings;document.getElementById('rf-notes').value=r.notes||'';document.getElementById('recipe-del-btn').style.display='';renderEmojiGrid('recipe-emoji-grid',EMOJIS_RECIPE,'recipeSelEmoji');renderIngList();document.getElementById('recipe-overlay').classList.add('open');}
+function addIngredientRow(){ingRows.push({name:'',amount:1,unit:'pcs'});renderIngList();}
+function renderIngList(){
+  const el=document.getElementById('ing-list');
+  if(!ingRows.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No ingredients yet</div>';return;}
+  el.innerHTML=ingRows.map((ing,i)=>`<div class="ing-row">
+    <input class="form-input" value="${ing.name}" placeholder="Ingredient" oninput="ingRows[${i}].name=this.value">
+    <input class="form-input ing-amt" type="number" min="0" step="0.1" value="${ing.amount}" oninput="ingRows[${i}].amount=parseFloat(this.value)||0">
+    <input class="form-input ing-unit" value="${ing.unit}" placeholder="unit" oninput="ingRows[${i}].unit=this.value">
+    <button class="ing-remove" onclick="ingRows.splice(${i},1);renderIngList()">×</button>
+  </div>`).join('');
+}
+function saveRecipe(){
+  const name=document.getElementById('rf-name').value.trim();if(!name){toast('Enter a recipe name','err');return;}
+  const ings=ingRows.filter(i=>i.name.trim());
+  const data={emoji:recipeSelEmoji,name,type:document.getElementById('rf-type').value,servings:parseInt(document.getElementById('rf-servings').value)||2,notes:document.getElementById('rf-notes').value.trim(),fav:false,ingredients:ings};
+  if(recipeEditId){const r=recipes.find(r=>r.id===recipeEditId);const fav=r.fav;Object.assign(r,data);r.fav=fav;addHist('add',`Updated recipe: ${name}`);}
+  else{recipes.push({id:recipeNextId++,...data});addHist('add',`Added recipe: ${name}`);}
+  saveAll();closeOverlay('recipe-overlay');renderRecipes();toast(recipeEditId?'Recipe updated':'Recipe added');
+}
+function deleteRecipe(){if(!recipeEditId)return;const r=recipes.find(r=>r.id===recipeEditId);if(!r||!confirm(`Delete ${r.name}?`))return;recipes=recipes.filter(r=>r.id!==recipeEditId);addHist('remove',`Deleted recipe: ${r.name}`);saveAll();closeOverlay('recipe-overlay');renderRecipes();toast('Deleted','warn');}
+
+// ── PLANNER ──────────────────────────────────────────────
+let weekOffset=0;
+let pickerContext=null; // {dateKey, meal}
+
+function getWeekDates(offset){
+  const today=new Date();today.setHours(0,0,0,0);
+  const dow=today.getDay();
+  const monday=new Date(today);monday.setDate(today.getDate()-((dow+6)%7)+offset*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
+}
+function dateKey(d){return d.toISOString().slice(0,10);}
+function shiftWeek(d){weekOffset+=d;renderPlanner();}
+function renderPlanner(){
+  const days=getWeekDates(weekOffset);
+  const today=new Date();today.setHours(0,0,0,0);
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const start=days[0],end=days[6];
+  document.getElementById('week-label').textContent=`${start.getDate()}/${start.getMonth()+1} – ${end.getDate()}/${end.getMonth()+1}`;
+  document.getElementById('planner-days').innerHTML=days.map((d,i)=>{
+    const dk=dateKey(d);
+    const isToday=d.getTime()===today.getTime();
+    const plan=planner[dk]||{breakfast:[],lunch:[],dinner:[]};
+    return`<div class="day-card">
+      <div class="day-header"><span class="${isToday?'day-today':''}">${dayNames[i]} ${d.getDate()}/${d.getMonth()+1}${isToday?' · Today':''}</span></div>
+      ${MEALS.map(meal=>`<div class="meal-row">
+        <div class="meal-label">${MEAL_LABELS[meal]}</div>
+        <div class="meal-slots">
+          ${(plan[meal]||[]).map(rid=>{const r=recipes.find(r=>r.id===rid);return r?`<div class="meal-item"><span>${r.emoji}</span><span>${r.name}</span><button class="meal-item-remove" onclick="removeMealItem('${dk}','${meal}',${rid})">×</button></div>`:''}).join('')}
+          <button class="meal-add-btn" onclick="openMealPicker('${dk}','${meal}')">+ Add</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+function openMealPicker(dk,meal){
+  pickerContext={dk,meal};
+  document.getElementById('picker-title').textContent=`Add to ${MEAL_LABELS[meal]}`;
+  document.getElementById('picker-search').value='';
+  renderPickerList();
+  document.getElementById('picker-overlay').classList.add('open');
+}
+function renderPickerList(){
+  const q=(document.getElementById('picker-search').value||'').toLowerCase();
+  const dk=pickerContext?.dk,meal=pickerContext?.meal;
+  const current=(planner[dk]||{})[meal]||[];
+  const f=recipes.filter(r=>r.name.toLowerCase().includes(q));
+  document.getElementById('picker-list').innerHTML=f.map(r=>{
+    const sel=current.includes(r.id);
+    return`<div class="picker-item" onclick="toggleMealItem('${dk}','${meal}',${r.id})">
+      <div class="picker-emoji">${r.emoji}</div>
+      <div class="picker-name">${r.name}<br><span style="font-size:11px;color:var(--text2)">${MEAL_TYPES[r.type]} · ${r.servings} srv</span></div>
+      ${sel?'<div class="picker-check">✓</div>':''}
+    </div>`;
+  }).join('')||'<div class="empty-msg">No recipes found</div>';
+}
+function toggleMealItem(dk,meal,rid){
+  if(!planner[dk])planner[dk]={breakfast:[],lunch:[],dinner:[]};
+  if(!planner[dk][meal])planner[dk][meal]=[];
+  const arr=planner[dk][meal];
+  const idx=arr.indexOf(rid);
+  if(idx>=0)arr.splice(idx,1);else arr.push(rid);
+  saveAll();renderPickerList();renderPlanner();
+}
+function removeMealItem(dk,meal,rid){
+  if(planner[dk]&&planner[dk][meal])planner[dk][meal]=planner[dk][meal].filter(id=>id!==rid);
+  saveAll();renderPlanner();
 }
 
-async function writeNFCTag(){
-  if(!('NDEFWriter' in window)&&!('NDEFReader' in window)){showNFCResult('write-result','err','NDEFWriter not available. Use Chrome 89+ on Android.');return;}
-  const id=parseInt(document.getElementById('nfc-write-picker').value);
-  const item=items.find(i=>i.id===id);if(!item)return;
-  const res=document.getElementById('write-result');
-  res.style.display='block';res.className='nfc-result warn';res.textContent='Hold phone to blank NFC tag...';
-  try{
-    const writer=new NDEFReader();
-    await writer.write({records:[{recordType:'text',data:`ks:${item.id}`}]});
-    const reader=new NDEFReader();
-    await reader.scan();
-    reader.addEventListener('reading',({serialNumber})=>{
-      item.nfc=serialNumber||`ks-${item.id}`;
-      addHist('add',`Linked NFC tag to ${item.name}`);save();renderInventory();
-      res.className='nfc-result ok';res.textContent=`✅ NFC tag linked to ${item.name}! Now tap it to deduct stock.`;
-    },{once:true});
-  }catch(e){res.className='nfc-result err';res.textContent='Write failed: '+e.message;}
+// ── SHOPPING ──────────────────────────────────────────────
+let shopPeriod=1;
+function setPeriod(n){
+  shopPeriod=n;
+  document.querySelectorAll('.period-btn').forEach((b,i)=>{b.classList.toggle('active',[1,2,3,5,7][i]===n);});
+  renderShopping();
+}
+function renderShopping(){
+  const today=new Date();today.setHours(0,0,0,0);
+  // gather all recipe IDs in the period
+  const needed={}; // {ingredientName: {amount, unit, recipes:[]}}
+  for(let d=0;d<shopPeriod;d++){
+    const dd=new Date(today);dd.setDate(today.getDate()+d);
+    const dk=dateKey(dd);
+    const plan=planner[dk];if(!plan)continue;
+    MEALS.forEach(meal=>{
+      (plan[meal]||[]).forEach(rid=>{
+        const recipe=recipes.find(r=>r.id===rid);if(!recipe)return;
+        recipe.ingredients.forEach(ing=>{
+          const key=ing.name.toLowerCase();
+          if(!needed[key])needed[key]={name:ing.name,amount:0,unit:ing.unit,recipes:[]};
+          needed[key].amount+=ing.amount;
+          if(!needed[key].recipes.includes(recipe.name))needed[key].recipes.push(recipe.name);
+        });
+      });
+    });
+  }
+  const el=document.getElementById('shop-content');
+  if(!Object.keys(needed).length){
+    el.innerHTML=`<div class="empty-msg">No meals planned for this period.<br>Go to 📅 Planner to add meals first.</div>`;return;
+  }
+  // match against stock
+  const toBuy=[],haveEnough=[];
+  Object.values(needed).forEach(ing=>{
+    // try to find matching stock item (fuzzy name match)
+    const stockMatch=stockItems.find(s=>s.name.toLowerCase()===ing.name.toLowerCase()||ing.name.toLowerCase().includes(s.name.toLowerCase()));
+    const inStock=stockMatch?stockMatch.qty:0;
+    const stockUnit=stockMatch?stockMatch.unit:ing.unit;
+    const need=ing.amount;
+    if(stockMatch&&inStock>=need){haveEnough.push({...ing,inStock,stockUnit,stockMatch});}
+    else{toBuy.push({...ing,inStock,stockUnit,shortage:need-(stockMatch?inStock:0),stockMatch});}
+  });
+
+  let html='';
+  if(toBuy.length){
+    html+=`<div class="shop-section"><div class="shop-section-title">🛒 Need to buy (${toBuy.length})</div>`;
+    html+=toBuy.map(ing=>{
+      const ck=shopChecked[ing.name.toLowerCase()]?'checked':'';
+      return`<div class="shop-item${ck?' have':''}">
+        <div class="shop-check ${ck}" onclick="toggleShopCheck('${ing.name.toLowerCase()}')">
+          ${ck?'✓':''}
+        </div>
+        <div class="shop-name">${ing.name}<br><span style="font-size:11px;color:var(--text3)">${ing.recipes.join(', ')}</span></div>
+        <div class="shop-qty">
+          <div>${ing.amount} ${ing.unit}</div>
+          ${ing.inStock>0?`<div class="shop-stock">Have ${ing.inStock}</div>`:''}
+          <div class="shop-need">Buy ${ing.shortage.toFixed(1)} ${ing.unit}</div>
+        </div>
+      </div>`;
+    }).join('');
+    html+='</div>';
+  }
+  if(haveEnough.length){
+    html+=`<div class="shop-section"><div class="shop-section-title">✅ Already have (${haveEnough.length})</div>`;
+    html+=haveEnough.map(ing=>`<div class="shop-item have">
+      <div class="shop-check checked">✓</div>
+      <div class="shop-name">${ing.name}</div>
+      <div class="shop-qty"><div>${ing.amount} ${ing.unit}</div><div class="shop-stock">In stock: ${ing.inStock} ${ing.stockUnit}</div></div>
+    </div>`).join('');
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+function toggleShopCheck(key){
+  if(shopChecked[key])delete shopChecked[key];else shopChecked[key]=true;
+  saveAll();renderShopping();
 }
 
-function showNFCResult(elId,type,msg){const el=document.getElementById(elId);el.style.display='block';el.className='nfc-result '+type;el.textContent=msg;}
+// ── NFC / SCAN ──────────────────────────────────────────────
+let scanMethod='nfc';
+let cameraStream=null;
+let barcodeDetector=null;
+let scanLoop=null;
+function setMethod(m){scanMethod=m;document.getElementById('method-nfc').classList.toggle('active-method',m==='nfc');document.getElementById('method-barcode').classList.toggle('active-method',m==='barcode');document.getElementById('panel-nfc').style.display=m==='nfc'?'':'none';document.getElementById('panel-barcode').style.display=m==='barcode'?'':'none';if(m!=='barcode'&&cameraStream)stopCamera();}
+function populateScanPickers(){const opts=stockItems.map(i=>`<option value="${i.id}">${i.emoji} ${i.name}</option>`).join('');document.getElementById('nfc-write-picker').innerHTML=opts;document.getElementById('barcode-assign-picker').innerHTML=opts;}
+function startNFCScan(){
+  if(!('NDEFReader' in window)){showRes('nfc-result','err','NFC not available. Use Chrome on Android with NFC enabled.');return;}
+  const zone=document.getElementById('nfc-zone');zone.classList.add('scanning');document.getElementById('nfc-icon').textContent='📡';document.getElementById('nfc-title').textContent='Scanning...';document.getElementById('nfc-result').style.display='none';
+  const reader=new NDEFReader();
+  reader.scan().then(()=>{reader.addEventListener('reading',({serialNumber})=>{zone.classList.remove('scanning');const item=stockItems.find(i=>i.nfc===serialNumber);if(item){if(item.qty>0){item.qty--;addHist('nfc',`NFC: used 1 of ${item.name} → ${item.qty} left`);saveAll();renderStock();renderStockStats();zone.classList.add('success');document.getElementById('nfc-icon').textContent='✅';document.getElementById('nfc-title').textContent=item.name;showRes('nfc-result','ok',`Deducted 1 — ${item.qty} ${item.unit} remaining`);if(item.qty===0)toast(`${item.name} out of stock`,'warn');else if(item.qty<=item.low)toast(`${item.name} running low`,'warn');}else{zone.classList.add('error');showRes('nfc-result','warn',`${item.name} already out of stock`);}}else{zone.classList.add('error');showRes('nfc-result','err',`Unknown tag. Use "Write NFC Tag" to link it first.`);}setTimeout(()=>{zone.className='nfc-zone';document.getElementById('nfc-icon').textContent='📡';document.getElementById('nfc-title').textContent='Tap to start NFC scan';document.getElementById('nfc-result').style.display='none';},3000);});}).catch(e=>{zone.classList.remove('scanning');showRes('nfc-result','err','NFC error: '+e.message);});}
+async function writeNFCTag(){if(!('NDEFReader' in window)){showRes('write-result','err','NFC not supported.');return;}const id=parseInt(document.getElementById('nfc-write-picker').value);const item=stockItems.find(i=>i.id===id);if(!item)return;const res=document.getElementById('write-result');res.style.display='block';res.className='nfc-res warn';res.textContent='Hold phone to blank NFC tag...';try{const writer=new NDEFReader();await writer.write({records:[{recordType:'text',data:`ks:${item.id}`}]});const reader=new NDEFReader();await reader.scan();reader.addEventListener('reading',({serialNumber})=>{item.nfc=serialNumber||`ks-${item.id}`;addHist('add',`Linked NFC to ${item.name}`);saveAll();renderStock();res.className='nfc-res ok';res.textContent=`✅ NFC tag linked to ${item.name}!`;},{once:true});}catch(e){res.className='nfc-res err';res.textContent='Write failed: '+e.message;}}
+function showRes(elId,type,msg){const el=document.getElementById(elId);el.style.display='block';el.className='nfc-res '+type;el.textContent=msg;}
+async function toggleCamera(){if(cameraStream){stopCamera();return;}const btn=document.getElementById('cam-toggle-btn');try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const vid=document.getElementById('camera-view');vid.srcObject=cameraStream;vid.classList.add('active');btn.textContent='⏹ Stop Camera';if('BarcodeDetector' in window){barcodeDetector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e','code_39']});scanLoop=setInterval(async()=>{try{const b=await barcodeDetector.detect(vid);if(b.length){clearInterval(scanLoop);processBarcode(b[0].rawValue,true);}}catch(e){}},500);}else{showRes('barcode-result','warn','BarcodeDetector not available. Type manually.');}}catch(e){toast('Camera access denied','err');}}
+function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}if(scanLoop){clearInterval(scanLoop);scanLoop=null;}const vid=document.getElementById('camera-view');vid.srcObject=null;vid.classList.remove('active');document.getElementById('cam-toggle-btn').textContent='📷 Open Camera to Scan';}
+function processBarcode(val,fromCamera=false){val=(val||'').trim();if(!val)return;document.getElementById('barcode-input').value='';if(fromCamera)stopCamera();const item=stockItems.find(i=>i.barcode===val);const res=document.getElementById('barcode-result');res.style.display='block';if(item){if(item.qty>0){item.qty--;addHist('scan',`Barcode: used 1 of ${item.name} → ${item.qty} left`);saveAll();renderStock();renderStockStats();res.className='nfc-res ok';res.textContent=`✅ ${item.name} — ${item.qty} ${item.unit} remaining`;if(item.qty===0)toast(`${item.name} out of stock`,'warn');}else{res.className='nfc-res warn';res.textContent=`${item.name} already out of stock`;}}else{res.className='nfc-res err';res.textContent=`Barcode "${val}" not linked. Use "Assign barcode" below.`;}}
+function assignBarcode(){const id=parseInt(document.getElementById('barcode-assign-picker').value);const val=document.getElementById('barcode-assign-val').value.trim();if(!id||!val){toast('Pick an item and enter a barcode','err');return;}const item=stockItems.find(i=>i.id===id);if(!item)return;item.barcode=val;addHist('add',`Linked barcode to ${item.name}`);saveAll();renderStock();toast(`Barcode linked to ${item.name}`);}
 
-// BARCODE / CAMERA
-async function toggleCamera(){
-  if(cameraStream){stopCamera();return;}
-  const btn=document.getElementById('cam-toggle-btn');
-  try{
-    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
-    const vid=document.getElementById('camera-view');
-    vid.srcObject=cameraStream;vid.classList.add('active');
-    btn.textContent='⏹ Stop Camera';
-    if('BarcodeDetector' in window){
-      barcodeDetector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e','code_39']});
-      scanLoop=setInterval(async()=>{
-        try{const barcodes=await barcodeDetector.detect(vid);if(barcodes.length){clearInterval(scanLoop);processBarcode(barcodes[0].rawValue,true);}}catch(e){}
-      },500);
-    } else {
-      document.getElementById('barcode-result').style.display='block';
-      document.getElementById('barcode-result').className='nfc-result warn';
-      document.getElementById('barcode-result').textContent='BarcodeDetector API not available on this device. Please type the barcode manually.';
-    }
-  }catch(e){toast('Camera access denied','err');}
+// ── HISTORY ──────────────────────────────────────────────
+function renderHistory(){const el=document.getElementById('history-list');if(!history.length){el.innerHTML='<div class="empty-msg">No activity yet</div>';return;}const dc={add:'#2dce7a',remove:'#f5445a',scan:'#4f7cff',nfc:'#a855f7'};el.innerHTML=history.slice(0,50).map(h=>`<div class="hist-item"><div class="hist-dot" style="background:${dc[h.type]||'#888'}"></div><div class="hist-text">${h.text}</div><div class="hist-time">${h.time}</div></div>`).join('');}
+
+// ── SHARED UTILS ──────────────────────────────────────────────
+function renderEmojiGrid(gridId,emojis,varName){
+  const sel=window[varName];
+  document.getElementById(gridId).innerHTML=emojis.map(e=>`<span class="emoji-opt${e===sel?' sel':''}" onclick="window['${varName}']='${e}';renderEmojiGrid('${gridId}',${JSON.stringify(emojis)},'${varName}')">${e}</span>`).join('');
 }
+function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
 
-function stopCamera(){
-  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
-  if(scanLoop){clearInterval(scanLoop);scanLoop=null;}
-  const vid=document.getElementById('camera-view');vid.srcObject=null;vid.classList.remove('active');
-  document.getElementById('cam-toggle-btn').textContent='📷 Open Camera to Scan';
-}
-
-function processBarcode(val,fromCamera=false){
-  val=(val||'').trim();if(!val)return;
-  document.getElementById('barcode-input').value='';
-  if(fromCamera)stopCamera();
-  const item=items.find(i=>i.barcode===val);
-  const res=document.getElementById('barcode-result');res.style.display='block';
-  if(item){
-    if(item.qty>0){
-      item.qty--;addHist('scan',`Barcode: used 1 ${item.unit} of ${item.name} → ${item.qty} left`);save();renderInventory();renderStats();
-      res.className='nfc-result ok';res.textContent=`✅ ${item.name} — deducted 1. ${item.qty} ${item.unit} remaining.`;
-      if(item.qty===0)toast(`${item.name} is now out of stock`,'warn');
-    } else {res.className='nfc-result warn';res.textContent=`⚠️ ${item.name} is already out of stock.`;}
-  } else {res.className='nfc-result err';res.textContent=`❓ Barcode "${val}" not linked to any item. Use "Assign barcode" below to link it.`;}
-}
-
-function assignBarcode(){
-  const id=parseInt(document.getElementById('barcode-assign-picker').value);
-  const val=document.getElementById('barcode-assign-val').value.trim();
-  if(!id||!val){toast('Pick an item and enter a barcode','err');return;}
-  const item=items.find(i=>i.id===id);if(!item)return;
-  item.barcode=val;addHist('add',`Linked barcode ${val} to ${item.name}`);save();renderInventory();
-  toast(`Barcode linked to ${item.name}`,'ok');document.getElementById('barcode-assign-val').value='';
-}
-
-function populatePickers(){
-  const opts=items.map(i=>`<option value="${i.id}">${i.emoji} ${i.name}</option>`).join('');
-  document.getElementById('nfc-write-picker').innerHTML=opts;
-  document.getElementById('barcode-assign-picker').innerHTML=opts;
-}
-
-// HISTORY
-function renderHistory(){
-  const el=document.getElementById('history-list');
-  if(!history.length){el.innerHTML='<div class="empty-msg">No activity yet</div>';return;}
-  const dotColor={add:'#2dce7a',remove:'#f5445a',scan:'#4f7cff',nfc:'#a855f7'};
-  el.innerHTML=history.slice(0,50).map(h=>`<div class="hist-item"><div class="hist-dot" style="background:${dotColor[h.type]||'#888'}"></div><div class="hist-text">${h.text}</div><div class="hist-time">${h.time}</div></div>`).join('');
-}
-
-// SHEET
-function openAddSheet(){editId=null;selEmoji='🥚';document.getElementById('sheet-title').textContent='Add Item';document.getElementById('f-name').value='';document.getElementById('f-qty').value='1';document.getElementById('f-unit').value='pcs';document.getElementById('f-low').value='2';document.getElementById('f-barcode').value='';document.getElementById('f-cat').value='Produce';document.getElementById('del-btn').style.display='none';renderEmojiGrid();document.getElementById('sheet-overlay').classList.add('open');}
-function openEditSheet(id){const item=items.find(i=>i.id===id);if(!item)return;editId=id;selEmoji=item.emoji;document.getElementById('sheet-title').textContent='Edit Item';document.getElementById('f-name').value=item.name;document.getElementById('f-qty').value=item.qty;document.getElementById('f-unit').value=item.unit;document.getElementById('f-low').value=item.low;document.getElementById('f-barcode').value=item.barcode||'';document.getElementById('f-cat').value=item.category;document.getElementById('del-btn').style.display='';renderEmojiGrid();document.getElementById('sheet-overlay').classList.add('open');}
-function closeSheet(e){if(!e||e.target===document.getElementById('sheet-overlay'))document.getElementById('sheet-overlay').classList.remove('open');}
-function renderEmojiGrid(){document.getElementById('emoji-grid').innerHTML=EMOJIS.map(e=>`<span class="emoji-opt${e===selEmoji?' sel':''}" onclick="selEmoji='${e}';renderEmojiGrid()">${e}</span>`).join('');}
-function saveItem(){const name=document.getElementById('f-name').value.trim();if(!name){toast('Enter a name','err');return;}const data={emoji:selEmoji,name,category:document.getElementById('f-cat').value,qty:parseInt(document.getElementById('f-qty').value)||0,unit:document.getElementById('f-unit').value||'pcs',low:parseInt(document.getElementById('f-low').value)||2,barcode:document.getElementById('f-barcode').value.trim()};if(editId){const item=items.find(i=>i.id===editId);const nfc=item.nfc||'';Object.assign(item,data);item.nfc=nfc;addHist('add',`Updated ${name}`);}else{items.push({id:nextId++,...data,nfc:''});addHist('add',`Added ${name} (${data.qty} ${data.unit})`);}save();closeSheet();renderAll();toast(editId?'Item updated':'Item added','ok');}
-function deleteItem(){if(!editId)return;const item=items.find(i=>i.id===editId);if(!item)return;if(!confirm(`Delete ${item.name}?`))return;items=items.filter(i=>i.id!==editId);addHist('remove',`Deleted ${item.name}`);save();closeSheet();renderAll();toast('Item deleted','ok');}
-function renderAll(){renderStats();renderCats();renderInventory();}
-renderAll();
+// ── INIT ──────────────────────────────────────────────
+renderStockAll();
 </script>
 </body>
 </html>
