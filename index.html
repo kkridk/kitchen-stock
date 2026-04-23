@@ -233,6 +233,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .custom-add-row input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:14px;color:var(--text);outline:none;}
 .custom-add-row input:focus{border-color:var(--accent);}
 .custom-add-row button{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;cursor:pointer;}
+/* DEDUCT CONFIRM */
+.deduct-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);font-size:13px;}
+.deduct-item-name{flex:1;color:var(--text);}
+.deduct-item-qty{color:var(--amber);font-weight:600;margin-left:8px;}
+.deduct-item-stock{font-size:11px;color:var(--text3);margin-left:6px;}
+.deduct-day-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;padding:8px 2px 4px;}
 /* SETTINGS */
 .settings-wrap{padding:16px 14px 32px;}
 .settings-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:8px;}
@@ -515,6 +521,27 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   </div>
 </div>
 
+<!-- DEDUCT CONFIRM SHEET -->
+<div class="overlay" id="deduct-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:26px">🍽️</span>
+      <div>
+        <div class="sheet-title" style="margin-bottom:0" id="deduct-title">Meals from yesterday</div>
+        <div style="font-size:12px;color:var(--text2)" id="deduct-subtitle"></div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Deduct these ingredients from your stock?</div>
+    <div id="deduct-items" style="display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow-y:auto;margin-bottom:16px"></div>
+    <div id="deduct-more-days" style="font-size:12px;color:var(--text3);margin-bottom:14px"></div>
+    <div class="sheet-actions">
+      <button class="sheet-btn cancel" onclick="skipDeduct()">Skip</button>
+      <button class="sheet-btn save" onclick="confirmDeduct()">✓ Deduct from stock</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -584,6 +611,7 @@ let recipes=JSON.parse(localStorage.getItem('ks_recipes')||'null')||[
 let planner=JSON.parse(localStorage.getItem('ks_planner')||'{}');
 let shopChecked=JSON.parse(localStorage.getItem('ks_shop_checked')||'{}');
 let history=JSON.parse(localStorage.getItem('ks_history')||'[]');
+let consumedDays=JSON.parse(localStorage.getItem('ks_consumed')||'{}'); // {dateKey: true/skipped}
 let stockNextId=Math.max(0,...stockItems.map(i=>i.id))+1;
 let recipeNextId=Math.max(0,...recipes.map(r=>r.id))+1;
 
@@ -596,6 +624,7 @@ function saveAll(){
   localStorage.setItem('ks_cats',JSON.stringify(stockCategories));
   localStorage.setItem('ks_meal_types',JSON.stringify(mealTypes));
   localStorage.setItem('ks_units',JSON.stringify(customUnits));
+  localStorage.setItem('ks_consumed',JSON.stringify(consumedDays));
 }
 function addHist(type,text){history.unshift({type,text,time:new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})});saveAll();}
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',2200);}
@@ -1370,8 +1399,130 @@ function fmtNum(n){
   return n.toFixed(1).replace(/\.0$/,'');
 }
 
+// ── AUTO DEDUCT ──────────────────────────────────────────────
+let deductQueue=[]; // list of {dk, label} to process
+let deductIngredients=[]; // [{name, amount, unit, stockItem}] for current batch
+
+function checkPastMeals(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  // find all past planned days not yet consumed or skipped
+  const pending=Object.keys(planner)
+    .filter(dk=>{
+      const d=new Date(dk); d.setHours(0,0,0,0);
+      return d<today && !consumedDays[dk] && hasMeals(planner[dk]);
+    })
+    .sort(); // oldest first
+  if(!pending.length) return;
+
+  // build deduct queue — show oldest first, batch all together
+  deductQueue=pending;
+  buildDeductPreview(pending);
+}
+
+function hasMeals(dayPlan){
+  return MEALS.some(m=>(dayPlan[m]||[]).length>0);
+}
+
+function buildDeductPreview(days){
+  // aggregate all ingredients across all pending days
+  const needed={};
+  days.forEach(dk=>{
+    const dayPlan=planner[dk];
+    MEALS.forEach(meal=>{
+      (dayPlan[meal]||[]).forEach(rid=>{
+        const recipe=recipes.find(r=>r.id===rid); if(!recipe)return;
+        recipe.ingredients.forEach(ing=>{
+          const key=ing.name.toLowerCase();
+          if(!needed[key])needed[key]={name:ing.name,amount:0,unit:ing.unit};
+          const c=convertUnit(ing.amount,ing.unit,needed[key].unit);
+          needed[key].amount+=c!==null?c:ing.amount;
+        });
+      });
+    });
+  });
+
+  deductIngredients=Object.values(needed);
+
+  // build title
+  const dayLabels=days.map(dk=>{
+    const d=new Date(dk);
+    const diff=Math.round((new Date().setHours(0,0,0,0)-d)/(86400000));
+    if(diff===1)return'Yesterday';
+    if(diff===2)return'2 days ago';
+    return`${d.getDate()}/${d.getMonth()+1}`;
+  });
+
+  document.getElementById('deduct-title').textContent=
+    days.length===1?`Meals from ${dayLabels[0]}`:`Meals from ${days.length} past days`;
+  document.getElementById('deduct-subtitle').textContent=dayLabels.join(' · ');
+
+  // render ingredient list
+  const el=document.getElementById('deduct-items');
+  el.innerHTML=deductIngredients.map(ing=>{
+    const stockMatch=stockItems.find(s=>s.name.toLowerCase()===ing.name.toLowerCase());
+    const {have,unit,compatible}=stockMatch
+      ?compareUnits(ing.amount,ing.unit,stockMatch.qty,stockMatch.unit)
+      :{have:0,unit:ing.unit,compatible:false};
+    const afterQty=stockMatch?Math.max(0,have-ing.amount):0;
+    const willEmpty=stockMatch&&afterQty===0;
+    const noStock=!stockMatch;
+    return`<div class="deduct-item">
+      <span class="deduct-item-name">${ing.name}</span>
+      <span class="deduct-item-qty">−${fmtNum(ing.amount)} ${ing.unit}</span>
+      <span class="deduct-item-stock">${
+        noStock?'(not in stock)':
+        compatible?`→ ${fmtNum(Math.max(0,have-ing.amount))} ${unit} left${willEmpty?' ⚠️':''}`:
+        '(diff units)'
+      }</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('deduct-overlay').classList.add('open');
+}
+
+function confirmDeduct(){
+  deductIngredients.forEach(ing=>{
+    const stockMatch=stockItems.find(s=>s.name.toLowerCase()===ing.name.toLowerCase());
+    if(!stockMatch)return;
+    const {need,have,unit,compatible}=compareUnits(ing.amount,ing.unit,stockMatch.qty,stockMatch.unit);
+    if(compatible){
+      // convert deduction back to stock unit
+      const deductInStockUnit=convertUnit(ing.amount,ing.unit,stockMatch.unit)??ing.amount;
+      stockMatch.qty=Math.max(0,stockMatch.qty-deductInStockUnit);
+    } else {
+      stockMatch.qty=Math.max(0,stockMatch.qty-ing.amount);
+    }
+  });
+
+  // mark all pending days as consumed
+  deductQueue.forEach(dk=>consumedDays[dk]='consumed');
+  addHist('remove',`Auto-deducted stock for ${deductQueue.length} past day${deductQueue.length>1?'s':''}`);
+  saveAll(); renderStockAll();
+  document.getElementById('deduct-overlay').classList.remove('open');
+  toast(`Stock deducted for ${deductQueue.length} day${deductQueue.length>1?'s':''}`, 'ok');
+  deductQueue=[]; deductIngredients=[];
+}
+
+function skipDeduct(){
+  // mark as skipped so we don't ask again
+  deductQueue.forEach(dk=>consumedDays[dk]='skipped');
+  saveAll();
+  document.getElementById('deduct-overlay').classList.remove('open');
+  deductQueue=[]; deductIngredients=[];
+}
+
 // ── INIT ──────────────────────────────────────────────
 renderStockAll();
+// check for past meals after passcode — hook into pcCheck
+const _origPcCheck=pcCheck;
+window.pcCheck=function(){
+  _origPcCheck();
+  if(document.getElementById('passcode-screen').classList.contains('hidden')){
+    setTimeout(checkPastMeals,400);
+  }
+};
+// also check on load if already "unlocked" (won't trigger if passcode screen is showing)
+// passcode always shows on load so checkPastMeals fires via pcCheck after unlock
 </script>
 </body>
 </html>
